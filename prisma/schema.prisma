@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  // Không đặt url ở đây nữa
+  url      = env("DATABASE_URL")
 }
 
 enum VaiTro {
@@ -22,17 +22,17 @@ model User {
   vaiTro      VaiTro
   ngayTao     DateTime  @default(now())
   ngayCapNhat DateTime  @updatedAt
-  
+
   HocVien     HocVien?
   Admin       Admin?
 }
 
 model HocVien {
   id   Int  @id
-  User User @relation(fields: [id], references: [id])
+  User User @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model Admin {
   id   Int  @id
-  User User @relation(fields: [id], references: [id])
+  User User @relation(fields: [id], references: [id], onDelete: Cascade)
 }

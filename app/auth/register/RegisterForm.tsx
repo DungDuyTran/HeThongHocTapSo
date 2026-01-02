@@ -1,7 +1,19 @@
+// @/app/components/auth/RegisterForm.tsx
 "use client";
 
+import React from "react";
+
+// Định nghĩa interface rõ ràng để tránh lỗi "property does not exist"
+export interface RegisterFormData {
+  hoTen: string;
+  email: string;
+  sdt: string;
+  ngaySinh: string;
+  password: string;
+}
+
 interface Props {
-  formData: { hoTen: string; email: string; password: string };
+  formData: RegisterFormData;
   error: string;
   loading: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -16,66 +28,104 @@ export function RegisterForm({
   onSubmit,
 }: Props) {
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-white">
+    <div className="relative w-full min-h-screen overflow-y-auto bg-white py-10">
+      {/* Background Image */}
       <img
         src="/anh1.jpg"
         alt="background"
-        className="absolute inset-0 w-full h-full object-cover opacity-90"
+        className="absolute inset-0 w-full h-full object-cover opacity-90 fixed"
       />
 
-      <div className="relative z-10 flex items-center justify-center w-full h-full">
-        <div className="bg-[rgb(202,177,101)] bg-opacity-60 p-10 rounded-lg w-[400px] opacity-95 shadow-xl">
-          <h1 className="text-6xl font-bold text-white mb-8 text-center drop-shadow-md">
+      <div className="relative z-10 flex items-center justify-center w-full min-h-full">
+        <div className="bg-[rgb(202,177,101)] bg-opacity-80 p-8 rounded-lg w-[450px] shadow-xl">
+          <h1 className="text-4xl font-bold text-white mb-3 text-center drop-shadow-md">
             Đăng ký
           </h1>
 
+          {/* Hiển thị lỗi nếu có */}
           {error && (
-            <div className="p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded mb-4 text-white text-center">
+            <div className="p-3 bg-red-500 bg-opacity-20 border border-red-500 rounded mb-4 text-white text-center text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
-            <input
-              type="text"
-              name="hoTen"
-              value={formData.hoTen}
-              onChange={onChange}
-              placeholder="Họ và tên"
-              className="p-4 rounded bg-white text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(124,111,37)]"
-            />
+          <form onSubmit={onSubmit} className="flex flex-col gap-3">
+            <div>
+              <label className="text-white text-sm ml-1">Họ và tên *</label>
+              <input
+                type="text"
+                name="hoTen"
+                required
+                value={formData.hoTen}
+                onChange={onChange}
+                placeholder="Nguyễn Văn A"
+                className="w-full p-3 rounded bg-white text-black focus:outline-none focus:ring-2 focus:ring-[rgb(124,111,37)]"
+              />
+            </div>
 
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={onChange}
-              placeholder="Email"
-              className="p-4 rounded bg-white text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(124,111,37)]"
-            />
+            <div>
+              <label className="text-white text-sm ml-1">Email *</label>
+              <input
+                type="email"
+                name="email"
+                required
+                value={formData.email}
+                onChange={onChange}
+                placeholder="example@gmail.com"
+                className="w-full p-3 rounded bg-white text-black focus:outline-none focus:ring-2 focus:ring-[rgb(124,111,37)]"
+              />
+            </div>
 
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={onChange}
-              placeholder="Mật khẩu"
-              className="p-4 rounded bg-white text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[rgb(124,111,37)]"
-            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="text-white text-sm ml-1">Số điện thoại</label>
+                <input
+                  type="text"
+                  name="sdt"
+                  value={formData.sdt}
+                  onChange={onChange}
+                  placeholder="09xxx"
+                  className="w-full p-3 rounded bg-white text-black focus:outline-none focus:ring-2 focus:ring-[rgb(124,111,37)]"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-white text-sm ml-1">Ngày sinh</label>
+                <input
+                  type="date"
+                  name="ngaySinh"
+                  value={formData.ngaySinh}
+                  onChange={onChange}
+                  className="w-full p-3 rounded bg-white text-black focus:outline-none focus:ring-2 focus:ring-[rgb(124,111,37)]"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-white text-sm ml-1">Mật khẩu *</label>
+              <input
+                type="password"
+                name="password"
+                required
+                value={formData.password}
+                onChange={onChange}
+                placeholder="Tối thiểu 6 ký tự"
+                className="w-full p-3 rounded bg-white text-black focus:outline-none focus:ring-2 focus:ring-[rgb(124,111,37)]"
+              />
+            </div>
 
             <button
               type="submit"
               disabled={loading}
               className="mt-4 bg-[rgb(125,105,44)] hover:bg-[rgb(155,134,72)] text-white font-semibold py-3 rounded disabled:opacity-50 transition duration-200"
             >
-              {loading ? "Đang đăng ký..." : "Đăng ký"}
+              {loading ? "Đang xử lý..." : "Đăng ký ngay"}
             </button>
           </form>
 
-          <p className="mt-8 text-black text-center text-sm">
+          <p className="mt-6 text-black text-center text-sm">
             Đã có tài khoản?{" "}
             <a
-              className="text-white hover:underline hover:text-gray-200"
+              className="text-white hover:underline hover:text-gray-200 font-bold"
               href="/auth/login"
             >
               Đăng nhập ngay

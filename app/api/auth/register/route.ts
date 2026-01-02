@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Gọi Service xử lý đăng ký
+    // 2. Gọi Service xử lý đăng ký (Lỗi TS2345 đã được giải quyết)
     const newUser = await authService.register(validation.data);
 
     if (!newUser) {
@@ -28,13 +28,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Phản hồi thành công (không trả về password)
+    // 3. Trả về kết quả an toàn
     const { password, ...userWithoutPassword } = newUser;
     return NextResponse.json(
-      {
-        message: "Đăng ký tài khoản thành công",
-        user: userWithoutPassword,
-      },
+      { message: "Đăng ký tài khoản thành công", user: userWithoutPassword },
       { status: 201 }
     );
   } catch (error) {
