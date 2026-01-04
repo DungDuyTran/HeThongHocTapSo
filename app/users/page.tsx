@@ -1,227 +1,235 @@
+"use client";
+import { useRouter } from "next/navigation";
 import React from "react";
 import {
   Calendar,
-  CheckCircle2,
+  CheckSquare,
   BarChart3,
-  BrainCircuit,
-  MessageSquare,
   BookOpen,
-  ShieldCheck,
-  ArrowRight,
-  Clock,
+  MessageSquare,
+  Layers,
+  CheckCircle,
+  Cpu,
+  Activity,
+  Target,
 } from "lucide-react";
 
 export default function LandingPage() {
+  const router = useRouter();
+
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-sans">
-      {/* --- Header/Navigation --- */}
-      <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-2 rounded-lg">
-                <BrainCircuit className="text-white w-6 h-6" />
-              </div>
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-                SmartPath AI
-              </span>
-            </div>
-            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-              <a href="#features" className="hover:text-blue-600 transition">
-                Tính năng
-              </a>
-              <a href="#about" className="hover:text-blue-600 transition">
-                Về hệ thống
-              </a>
-              <button className="bg-slate-900 text-white px-5 py-2 rounded-full hover:bg-blue-600 transition">
-                Đăng nhập
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-white text-gray-800 font-[TimesNewRoman]">
+      {/* ================= HERO ================= */}
+      <section
+        className="relative min-h-screen flex items-center justify-center px-8 bg-cover bg-center mb-3"
+        style={{ backgroundImage: "url('/bg1.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10" />
 
-      {/* --- Hero Section --- */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-sm font-semibold mb-6 inline-block">
-            Hệ sinh thái học tập All-in-one
-          </span>
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight mb-6">
-            Tối ưu hóa lộ trình học tập <br />
-            <span className="text-blue-600">bằng Trí tuệ nhân tạo</span>
+        {/* Auth */}
+        <div className="absolute top-6 right-12 flex gap-4 z-20">
+          <button
+            className="px-5 py-2 rounded-xl bg-green-600 shadow-2xl text-white border-2 border-gray-200 hover:bg-white hover:text-green-600 transition"
+            onClick={() => router.push("/auth/login")}
+          >
+            Đăng nhập
+          </button>
+          <button
+            className="px-5 py-2 rounded-xl bg-green-600 shadow-2xl text-white border-2 border-gray-200 hover:bg-white hover:text-green-600 transition"
+            onClick={() => router.push("/auth/register")}
+          >
+            Đăng ký
+          </button>
+        </div>
+
+        <div className="relative z-10 max-w-6xl text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-green-700 mb-6">
+            Hệ thống thông minh hỗ trợ quản lý và tối ưu hóa lộ trình học tập cá
+            nhân
           </h1>
-          <p className="text-lg text-slate-600 mb-10 max-w-2xl mx-auto">
-            Hệ thống thông minh giúp bạn quản lý thời gian, lập kế hoạch chi
-            tiết và tối đa hóa hiệu suất học tập cá nhân dựa trên dữ liệu thực
-            tế.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <button className="flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 shadow-lg shadow-blue-200 transition">
-              Bắt đầu học ngay <ArrowRight size={20} />
-            </button>
-            <button className="bg-white border border-slate-200 text-slate-700 px-8 py-4 rounded-xl font-bold text-lg hover:bg-slate-50 transition">
-              Xem bản Demo
-            </button>
-          </div>
-        </div>
-      </section>
 
-      {/* --- Main Features Grid --- */}
-      <section id="features" className="py-20 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">
-              Tính năng trình diễn cốt lõi
-            </h2>
-            <p className="text-slate-600">
-              Công cụ chuyên nghiệp giúp bạn làm chủ kiến thức
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 */}
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-6">
-                <Calendar size={28} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">
-                Thời gian biểu thông minh
-              </h3>
-              <p className="text-slate-600 leading-relaxed">
-                Quản lý lịch học theo ngày, tuần, tháng với tính năng kéo thả
-                mượt mà. Tích hợp đồng bộ hóa giúp bạn không bỏ lỡ lịch trình.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-6">
-                <CheckCircle2 size={28} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">To-do List ưu tiên</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Chia nhỏ công việc hàng ngày, thiết lập độ ưu tiên thông minh
-                giúp bạn tập trung vào những việc quan trọng nhất.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6">
-                <BarChart3 size={28} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Thống kê học tập</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Phân tích dữ liệu từ To-do list để đưa ra biểu đồ tiến độ, giúp
-                bạn nhìn lại quá trình nỗ lực của bản thân.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6">
-                <Clock size={28} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Flashcard & Kiểm tra</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Ôn tập kiến thức qua thẻ ghi nhớ và các bài kiểm tra tính thời
-                gian, tăng khả năng phản xạ và ghi nhớ lâu.
-              </p>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mb-6">
-                <MessageSquare size={28} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Chatbot AI Hỗ trợ</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Trợ lý ảo túc trực 24/7 giải đáp thắc mắc và gợi ý tài liệu học
-                tập phù hợp với trình độ của bạn.
-              </p>
-            </div>
-
-            {/* Feature 6 */}
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition">
-              <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6">
-                <BookOpen size={28} />
-              </div>
-              <h3 className="text-xl font-bold mb-3">Ghi chú đa năng</h3>
-              <p className="text-slate-600 leading-relaxed">
-                Lưu trữ mọi ý tưởng và kiến thức quan trọng một cách hệ thống,
-                hỗ trợ định dạng chuyên nghiệp.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* --- Admin/User Role Section --- */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h2 className="text-3xl font-bold mb-6">
-              Phân quyền thông minh cho hệ thống
-            </h2>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="mt-1 bg-blue-100 p-1 rounded-full text-blue-600">
-                  <ShieldCheck size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold">Dành cho Học viên</h4>
-                  <p className="text-slate-600">
-                    Trải nghiệm toàn bộ hệ sinh thái học tập, quản lý cá nhân và
-                    tương tác với AI.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="mt-1 bg-slate-100 p-1 rounded-full text-slate-600">
-                  <ShieldCheck size={20} />
-                </div>
-                <div>
-                  <h4 className="font-bold">Dành cho Quản trị viên</h4>
-                  <p className="text-slate-600">
-                    Quản lý tài khoản, giám sát hệ thống và tối ưu hóa trải
-                    nghiệm người dùng.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white shadow-2xl">
-            <h3 className="text-2xl font-bold mb-4 italic">
-              Mục tiêu của chúng tôi
-            </h3>
-            <p className="text-blue-100 text-lg leading-relaxed">
-              Xây dựng một môi trường số mà ở đó mỗi học viên đều có một người
-              đồng hành thông minh, giúp biến những mục tiêu khó khăn thành một
-              lộ trình thực hiện rõ ràng và khả thi.
-            </p>
-            <div className="mt-8 flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-full"></div>
-              <div>
-                <p className="font-bold">Trần Duy Dũng</p>
-                <p className="text-sm text-blue-200">
-                  Software Engineering Student
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* --- Footer --- */}
-      <footer className="bg-slate-900 text-slate-400 py-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p>© 2026 SmartPath AI - Đồ án tốt nghiệp Đại học Duy Tân</p>
-          <p className="text-sm mt-2">
-            Phát triển bởi Trần Duy Dũng - Chuyên ngành Công nghệ Phần mềm
+          <p className="text-xl md:text-2xl text-gray-700">
+            Nền tảng học tập{" "}
+            <span className="font-semibold text-green-700">
+              All-in-one Ecosystem
+            </span>{" "}
+            cá nhân hóa lộ trình học tập bằng trí tuệ nhân tạo.
           </p>
         </div>
-      </footer>
+      </section>
+
+      {/* ================= FEATURES ================= */}
+      <section
+        className="relative py-24 bg-cover bg-center mb-3"
+        style={{ backgroundImage: "url('/bg2.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10" />
+
+        <div className="relative max-w-7xl mx-auto px-8">
+          <h2 className="text-5xl font-bold text-center text-green-700 mb-10">
+            Hệ Sinh Thái Học Tập
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <FeatureCard
+              icon={<Calendar />}
+              title="Thời Gian Biểu"
+              desc="Xây dựng thời gian biểu học tập chi tiết theo ngày, tuần và tháng, giúp phân bổ thời gian hợp lý."
+            />
+            <FeatureCard
+              icon={<CheckSquare />}
+              title="To-do List Học Tập"
+              desc="Quản lý danh sách công việc học tập, phân loại theo mức độ ưu tiên và trạng thái hoàn thành."
+            />
+            <FeatureCard
+              icon={<BarChart3 />}
+              title="Thống Kê & Phân Tích"
+              desc="Tự động tổng hợp dữ liệu học tập và hiển thị bằng biểu đồ trực quan."
+            />
+            <FeatureCard
+              icon={<BookOpen />}
+              title="Quản Lý Tài Liệu"
+              desc="Lưu trữ, phân loại và truy cập tài liệu học tập nhanh chóng và khoa học."
+            />
+            <FeatureCard
+              icon={<MessageSquare />}
+              title="Ghi Chú & Nhắc Nhở"
+              desc="Hỗ trợ ghi chú trong quá trình học và nhắc nhở các mốc thời gian quan trọng."
+            />
+            <FeatureCard
+              icon={<Layers />}
+              title="Nền Tảng Tích Hợp"
+              desc="Tích hợp toàn bộ chức năng học tập trong một hệ thống duy nhất, liền mạch và hiệu quả."
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ================= CORE TOOLS ================= */}
+      <section
+        className="relative py-24 bg-cover bg-center mb-3"
+        style={{ backgroundImage: "url('/bg3.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-white/10" />
+
+        <div className="relative max-w-6xl mx-auto px-8">
+          <h2 className="text-4xl md:text-5xl font-bold text-center text-green-700 mb-16">
+            Chức Năng Chính
+          </h2>
+
+          <div className="flex flex-col lg:flex-row gap-10">
+            <ToolCard
+              title="Quản Lý Thời Gian & Công Việc"
+              desc="Hỗ trợ xây dựng kế hoạch học tập rõ ràng, cân bằng giữa học tập và nghỉ ngơi."
+              items={[
+                "Lập lịch học theo ngày – tuần – tháng",
+                "Kéo thả công việc linh hoạt",
+                "Ưu tiên và phân loại nhiệm vụ",
+              ]}
+            />
+
+            <ToolCard
+              title="Theo Dõi & Đánh Giá Hiệu Suất"
+              desc="Theo dõi tiến độ học tập và đánh giá hiệu quả thông qua dữ liệu trực quan."
+              items={[
+                "Biểu đồ tiến độ học tập",
+                "Phân tích dữ liệu theo thời gian",
+                "Điều chỉnh kế hoạch học phù hợp",
+              ]}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ================= AI ================= */}
+      <section
+        className="relative py-24 bg-cover bg-center"
+        style={{ backgroundImage: "url('/bg-6.jpg')" }}
+      >
+        <div className="absolute inset-0 bg-black/10" />
+
+        <div className="relative max-w-6xl mx-auto px-8">
+          <h2 className="text-4xl md:text-5xl font-bold text-center text-white mb-16">
+            Trí Tuệ Nhân Tạo
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FeatureCard
+              icon={<Cpu />}
+              title="Cá Nhân Hóa Lộ Trình"
+              desc="Đề xuất lộ trình học tập phù hợp với từng người học."
+            />
+            <FeatureCard
+              icon={<Activity />}
+              title="Phân Tích Hiệu Suất"
+              desc="Đánh giá hiệu quả học tập dựa trên dữ liệu thực tế."
+            />
+            <FeatureCard
+              icon={<Target />}
+              title="Tối Ưu Kế Hoạch"
+              desc="Điều chỉnh lịch học một cách thông minh."
+            />
+            <FeatureCard
+              icon={<MessageSquare />}
+              title="Hỗ Trợ 24/7"
+              desc="Trợ lý học tập luôn sẵn sàng hỗ trợ người học."
+            />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/* ================= COMPONENTS ================= */
+
+function FeatureCard({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-2xl border-2 border-green-700 hover:scale-[1.03] transition">
+      <div className="flex justify-center text-green-700 mb-2">
+        {React.cloneElement(icon as React.ReactElement, { size: 34 })}
+      </div>
+      <h3 className="text-xl font-bold text-center mb-2 text-green-700">
+        {title}
+      </h3>
+      <p className="text-sm text-gray-700 text-center leading-relaxed">
+        {desc}
+      </p>
+    </div>
+  );
+}
+
+function ToolCard({
+  title,
+  desc,
+  items,
+}: {
+  title: string;
+  desc: string;
+  items: string[];
+}) {
+  return (
+    <div className="bg-white p-8 rounded-xl shadow-2xl border-2 border-green-700 flex-1">
+      <h3 className="text-2xl font-bold text-center mb-4 text-green-700">
+        {title}
+      </h3>
+      <p className="text-gray-700 text-center mb-6">{desc}</p>
+      <ul className="space-y-3">
+        {items.map((item, i) => (
+          <li key={i} className="flex items-center">
+            <CheckCircle size={18} className="text-green-700 mr-2" />
+            {item}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
