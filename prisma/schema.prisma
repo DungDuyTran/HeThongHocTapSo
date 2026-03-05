@@ -6,11 +6,13 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
 enum Priority {
   LOW
   MEDIUM
   HIGH
 }
+
 enum VaiTro {
   HocVien
   Admin
@@ -27,20 +29,26 @@ model User {
   ngayTao     DateTime  @default(now())
   ngayCapNhat DateTime  @updatedAt
 
-  HocVien     HocVien?
-  Admin       Admin?
+  // Quan hệ 1-1
+  hocVien     HocVien?
+  admin       Admin?
+
+  // Quan hệ 1-n
+  flashcardFolders FlashcardFolder[]
+  flashcardHistories FlashcardHistory[]
 }
 
 model HocVien {
   id   Int  @id
-  User User @relation(fields: [id], references: [id], onDelete: Cascade)
-  ThoiGianBieu ThoiGianBieu[]
-  Todo Todo[]
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  thoiGianBieu ThoiGianBieu[]
+  todos        Todo[]
 }
 
 model Admin {
   id   Int  @id
-  User User @relation(fields: [id], references: [id], onDelete: Cascade)
+  user User @relation(fields: [id], references: [id], onDelete: Cascade)
 }
 
 model ThoiGianBieu {
@@ -49,26 +57,65 @@ model ThoiGianBieu {
   batDau    DateTime
   ketThuc   DateTime
   moTa      String?
-  
-  hocVienId Int 
+
+  hocVienId Int
   hocVien   HocVien  @relation(fields: [hocVienId], references: [id], onDelete: Cascade)
 
   ngayTao     DateTime @default(now())
   ngayCapNhat DateTime @updatedAt
 }
+
 model Todo {
   id          Int      @id @default(autoincrement())
   title       String
   description String?
   status      Boolean  @default(false)
   priority    Priority @default(MEDIUM)
-  targetDate  DateTime // Ngày cụ thể gắn với Todo
-  
+  targetDate  DateTime
+
   hocVienId   Int
   hocVien     HocVien  @relation(fields: [hocVienId], references: [id], onDelete: Cascade)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([targetDate]) // Đánh index để query theo ngày cực nhanh
+  @@index([targetDate])
+}
+
+model FlashcardFolder {
+  id        Int         @id @default(autoincrement())
+  name      String
+
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cards     Flashcard[]
+  histories FlashcardHistory[]
+
+  createdAt DateTime    @default(now())
+}
+
+model Flashcard {
+  id        Int             @id @default(autoincrement())
+  front     String
+  back      String
+
+  folderId  Int
+  folder    FlashcardFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+}
+
+model FlashcardHistory {
+  id              Int      @id @default(autoincrement())
+  score           Float
+  totalQuestions  Int
+  correctAnswers  Int
+  timeSpent       Int
+
+  folderId        Int
+  folder          FlashcardFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  userId          Int
+  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
 }

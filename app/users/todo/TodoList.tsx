@@ -5,7 +5,7 @@ import axios from "axios";
 import { useTodoStore } from "@/stores/useTodoStore";
 import { format } from "date-fns";
 import AddTodoModal from "./AddTodoModal";
-import { Trash2, Edit3, CheckCircle2 } from "lucide-react";
+import { Trash2, Edit3, CheckCircle2, Plus } from "lucide-react";
 
 const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
@@ -51,29 +51,45 @@ export default function TodoList() {
   };
 
   return (
-    <div className="flex-1 p-6 bg-white min-h-screen">
+    <div className="flex-1 p-6 bg-white min-h-screen font-sans text-black">
       <div className="max-w-4xl mx-auto">
-        {/* Header gọn gàng hơn */}
-        <header className="mb-8 border-b-[4px] border-black pb-4 flex justify-between items-end">
+        {/* Header Tối Ưu: Tiêu đề trái - Ngày & Nút Add phải */}
+        <header className="mb-6 border-b-[4px] border-black pb-4 flex justify-between items-center">
           <div>
-            <p className="text-blue-700 font-black mb-1 uppercase tracking-widest text-[10px]">
+            <p className="text-blue-700 font-black mb-0.5 uppercase tracking-widest text-[10px]">
               Tasks
             </p>
-            <h1 className="text-5xl font-black text-slate-900 capitalize tracking-tighter leading-none">
+            <h1 className="text-4xl font-black text-slate-900 capitalize tracking-tighter leading-none">
               {format(selectedDate, "eeee")}
             </h1>
           </div>
-          <span className="text-2xl font-black text-slate-900 border-[3px] border-black px-3 py-1 bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            {format(selectedDate, "dd/MM")}
-          </span>
+
+          <div className="flex items-center gap-3">
+            {/* Tag Ngày Tháng */}
+            <span className="text-xl font-black text-slate-900 border-[3px] border-black px-3 py-1.5 bg-yellow-400 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              {format(selectedDate, "dd/MM")}
+            </span>
+
+            {/* NÚT THÊM MỚI (Dấu cộng) - Đặt ngay cạnh ngày */}
+            <button
+              onClick={() => {
+                setEditingTodo(null);
+                setIsModalOpen(true);
+              }}
+              className="p-2 bg-blue-600 text-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-blue-500 active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
+              title="Thêm nhiệm vụ"
+            >
+              <Plus size={24} strokeWidth={4} />
+            </button>
+          </div>
         </header>
 
-        {/* Danh sách với khoảng cách hẹp hơn (space-y-3) */}
-        <div className="space-y-3">
+        {/* Danh sách nhiệm vụ nhỏ gọn (space-y-2) */}
+        <div className="space-y-2.5">
           {todos?.map((todo: any) => (
             <div
               key={todo.id}
-              className="flex items-center justify-between p-4 border-[3px] border-black rounded-[24px] bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-transform active:translate-y-1 active:shadow-none"
+              className="flex items-center justify-between p-3.5 border-[3px] border-black rounded-[20px] bg-white shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-0.5"
             >
               <div className="flex items-center gap-4">
                 <div className="relative flex items-center">
@@ -81,7 +97,7 @@ export default function TodoList() {
                     type="checkbox"
                     checked={todo.status}
                     onChange={() => handleToggle(todo.id, todo.status)}
-                    className="peer appearance-none w-7 h-7 border-[3px] border-black rounded-lg checked:bg-blue-500 cursor-pointer"
+                    className="peer appearance-none w-7 h-7 border-[3px] border-black rounded-lg checked:bg-blue-500 cursor-pointer transition-colors"
                   />
                   <CheckCircle2
                     className="absolute pointer-events-none text-white opacity-0 peer-checked:opacity-100 left-1 top-1"
@@ -90,55 +106,48 @@ export default function TodoList() {
                   />
                 </div>
 
-                <div>
+                <div className="flex flex-col">
                   <h3
-                    className={`text-xl font-black leading-tight ${todo.status ? "line-through text-slate-300" : "text-slate-900"}`}
+                    className={`text-lg font-black leading-tight tracking-tight ${todo.status ? "line-through text-slate-300" : "text-slate-900"}`}
                   >
                     {todo.title}
                   </h3>
-                  <span
-                    className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full border-2 border-black mt-1 inline-block ${
-                      todo.priority === "HIGH"
-                        ? "bg-red-400"
-                        : todo.priority === "MEDIUM"
-                          ? "bg-amber-400"
-                          : "bg-green-400"
-                    }`}
-                  >
-                    {todo.priority}
-                  </span>
+                  <div className="flex gap-2">
+                    <span
+                      className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full border-2 border-black mt-1 inline-block ${
+                        todo.priority === "HIGH"
+                          ? "bg-red-400"
+                          : todo.priority === "MEDIUM"
+                            ? "bg-amber-400"
+                            : "bg-green-400"
+                      }`}
+                    >
+                      {todo.priority}
+                    </span>
+                  </div>
                 </div>
               </div>
 
+              {/* Nút thao tác nhỏ gọn hơn */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
                     setEditingTodo(todo);
                     setIsModalOpen(true);
                   }}
-                  className="p-2 bg-white border-[3px] border-black rounded-xl hover:bg-amber-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none transition-all"
+                  className="p-1.5 bg-white border-[2px] border-black rounded-lg hover:bg-amber-400 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none transition-all"
                 >
-                  <Edit3 size={18} className="text-black stroke-[3]" />
+                  <Edit3 size={16} className="text-black stroke-[3]" />
                 </button>
                 <button
                   onClick={() => handleDelete(todo.id)}
-                  className="p-2 bg-white border-[3px] border-black rounded-xl hover:bg-red-500 hover:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none transition-all"
+                  className="p-1.5 bg-white border-[2px] border-black rounded-lg hover:bg-red-500 hover:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none transition-all"
                 >
-                  <Trash2 size={18} className="stroke-[3]" />
+                  <Trash2 size={16} className="stroke-[3]" />
                 </button>
               </div>
             </div>
           ))}
-
-          <button
-            onClick={() => {
-              setEditingTodo(null);
-              setIsModalOpen(true);
-            }}
-            className="w-full py-6 border-[3px] border-dashed border-slate-500 rounded-[30px] text-slate-500 font-black text-xl hover:border-black hover:text-black hover:bg-blue-50 transition-all uppercase"
-          >
-            + Add Task
-          </button>
         </div>
       </div>
 

@@ -43,7 +43,7 @@ export default function WeeklyCalendar() {
               onClick={() => setSelectedDate(day)}
               className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${
                 active
-                  ? "bg-blue-600 text-white shadow-lg scale-105"
+                  ? "bg-green-600 text-white shadow-lg scale-105"
                   : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-100"
               }`}
             >

@@ -42,16 +42,15 @@ export class AuthService {
       password: hashedPassword,
       vaiTro: data.vaiTro || VaiTro.HocVien,
 
-      // ĐÂY LÀ PHẦN QUAN TRỌNG NHẤT:
-      // Tự động tạo bản ghi ở bảng HocVien hoặc Admin tùy theo vaiTro
       ...(data.vaiTro === VaiTro.HocVien && {
-        HocVien: {
-          create: {}, // Tạo bản ghi rỗng trong bảng HocVien với id = user.id
+        hocVien: {
+          create: {},
         },
       }),
+
       ...(data.vaiTro === VaiTro.Admin && {
-        Admin: {
-          create: {}, // Tạo bản ghi rỗng trong bảng Admin với id = user.id
+        admin: {
+          create: {},
         },
       }),
     };

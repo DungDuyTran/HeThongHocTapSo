@@ -80,7 +80,7 @@ export default function AddTodoModal({
               onSave({ title, priority, id: todo?.id });
               setTitle("");
             }}
-            className="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all uppercase text-xl"
+            className="w-full py-5 bg-green-600 hover:bg-green-500 text-white font-black rounded-2xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all uppercase text-xl"
           >
             {todo ? "Lưu thay đổi" : "Tạo nhiệm vụ"}
           </button>

@@ -10,6 +10,9 @@ export default function TodoPage() {
         <WeeklyCalendar />
       </aside>
       <section className="flex-1 h-full overflow-y-auto bg-white scale-90">
+        <h1 className="text-6xl flex justify-center text-black font-bold">
+          TODOLIST
+        </h1>
         <TodoList />
       </section>
     </main>
