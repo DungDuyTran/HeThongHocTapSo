@@ -1,14 +1,29 @@
+import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { AuthService } from "@/lib/api/service/AuthService";
 
 export async function POST(req: NextRequest) {
-  // Khởi tạo bên trong hàm để an toàn hơn
-  const authService = new AuthService(); 
-  
+  const authService = new AuthService();
+
   try {
     const { email, password } = await req.json();
-    const loginResult = await authService.login(email, password);
+    const user = await prisma.user.findUnique({ where: { email } });
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: "Sai email hoặc mật khẩu" },
+        { status: 401 }
+      );
+    }
 
+    if (user.sdt === "LOCKED") {
+      return NextResponse.json(
+        { error: "Tài khoản của bạn đã bị khóa bởi Admin!, hãy kiểm tra email của bạn" },
+        { status: 403 }
+      );
+    }
+
+    const loginResult = await authService.login(email, password);
     if (!loginResult) {
       return NextResponse.json(
         { error: "Sai email hoặc mật khẩu" },
@@ -19,13 +34,13 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({
       message: "Đăng nhập thành công",
-      user: loginResult.user, 
+      user: loginResult.user,
     });
 
     // Thiết lập Cookie
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", 
+      secure: process.env.NODE_ENV === "production",
       path: "/",
       sameSite: "lax" as const,
     };
@@ -37,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     res.cookies.set("refresh_token", loginResult.refreshToken, {
       ...cookieOptions,
-      maxAge: 604800, 
+      maxAge: 604800,
     });
 
     return res;

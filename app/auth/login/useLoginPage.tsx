@@ -47,8 +47,9 @@ export function useLoginPage() {
       } else {
         router.push("/users");
       }
-    } catch (err) {
-      setError("Email hoặc mật khẩu không chính xác");
+    } catch (err: any) { 
+      const serverMessage = err.response?.data?.error || "Email hoặc mật khẩu không chính xác";
+      setError(serverMessage);
     }
   };
 
