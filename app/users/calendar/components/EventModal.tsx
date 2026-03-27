@@ -15,7 +15,7 @@ export default function EventModal({
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-white border-2 border-black p-8 rounded-[40px] w-full max-w-md shadow-[15px_15px_0px_0px_rgba(0,0,0,1)] space-y-5">
         <h2 className="text-2xl font-black uppercase italic border-b-2 border-black pb-2">
-          {type === "add" ? "Thêm lịch học" : "Cập nhật lịch"}
+          {type === "add" ? "Thêm hoạt động" : "Cập nhật lịch"}
         </h2>
         <div className="space-y-4 font-bold">
           <input

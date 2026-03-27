@@ -29,13 +29,14 @@ export default function LandingPage() {
         {/* Auth */}
         <div className="absolute top-6 right-12 flex gap-4 z-20">
           <button
-            className="px-5 py-2 rounded-xl bg-green-600 shadow-2xl text-white border-2 border-gray-200 hover:bg-white hover:text-green-600 transition"
+            className="px-6 py-2.5 rounded-2xl bg-green-600 text-white border-[2px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all uppercase tracking-tight text-sm hover:bg-white hover:text-green-700"
             onClick={() => router.push("/auth/login")}
           >
             Đăng nhập
           </button>
+
           <button
-            className="px-5 py-2 rounded-xl bg-green-600 shadow-2xl text-white border-2 border-gray-200 hover:bg-white hover:text-green-600 transition"
+            className="px-6 py-2.5 rounded-2xl bg-green-600 text-white border-[2px] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px] transition-all uppercase tracking-tight text-sm hover:bg-white hover:text-green-700"
             onClick={() => router.push("/auth/register")}
           >
             Đăng ký

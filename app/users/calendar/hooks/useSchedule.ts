@@ -33,7 +33,7 @@ export function useSchedule() {
     categoryId: "1",
   });
 
-  // 1. Khôi phục dữ liệu từ LocalStorage khi khởi tạo
+  // 1. Khôi phục dữ liệu từ LocalStorage khi khởi tạo . 
   useEffect(() => {
     const stored = localStorage.getItem("dtu_events_final");
     const storedCate = localStorage.getItem("dtu_cats_final");

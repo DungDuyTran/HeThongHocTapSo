@@ -35,7 +35,7 @@ export function useFlashcardFolder() {
 
   // Logic Xóa thư mục
   const handleDeleteFolder = async (id: number) => {
-    if (!confirm("Dũng chắc chắn muốn xóa toàn bộ thư mục này chứ?")) return;
+    if (!confirm("bạn chắc chắn muốn xóa toàn bộ thư mục này chứ?")) return;
     try {
       await axios.delete(`/api/flashcard/folder?id=${id}`);
       mutate(); // Cập nhật UI ngay lập tức
@@ -58,7 +58,6 @@ export function useFlashcardFolder() {
           name: newFolderName,
         });
       } else {
-        // Tạo thư mục mới
         await axios.post("/api/flashcard/folder", { name: newFolderName });
       }
       closeModal();

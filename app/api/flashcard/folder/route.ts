@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const folders = await prisma.flashcardfolder.findMany({
+    const folders = await prisma.flashcardFolder.findMany({
       where: { userId },
       include: {
         _count: {
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const userId = parseInt(req.headers.get("x-user-id") || "0");
-    const folder = await prisma.flashcardfolder.create({
+    const folder = await prisma.flashcardFolder.create({
       data: { name: body.name, userId },
     });
     return NextResponse.json(folder);

@@ -2,7 +2,8 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import useSWR from "swr";
-import { useQuiz } from "../../hooks/useQuiz";
+// Đảm bảo import đúng biến 'correct' từ hook của bạn
+import { useQuizLogic } from "../../hooks/useQuizLogic";
 import { Clock, Trophy, ArrowLeft, Target } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -16,10 +17,9 @@ export default function FastQuizPage() {
     { revalidateOnFocus: false },
   );
 
-  const { index, timer, isFinished, handleAnswer, current } = useQuiz(
-    folderId as string,
-    quizData,
-  );
+  // 1. PHẢI lấy thêm biến 'correct' ở đây
+  const { index, timer, isFinished, handleAnswer, current, correct } =
+    useQuizLogic(folderId as string, quizData || []);
 
   if (isLoading)
     return (
@@ -31,7 +31,10 @@ export default function FastQuizPage() {
   if (isFinished)
     return (
       <ResultScreen
-        score={Math.round((index / quizData.length) * 100)}
+        // 2. Dùng 'correct' để tính điểm thực tế, không dùng 'index'
+        score={Math.round((correct / quizData.length) * 100)}
+        correctCount={correct}
+        totalCount={quizData.length}
         folderId={folderId}
         router={router}
       />
@@ -67,7 +70,7 @@ export default function FastQuizPage() {
           </h2>
         </div>
 
-        {/* 4 ĐÁP ÁN KHÔI PHỤC */}
+        {/* 4 ĐÁP ÁN */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {current?.options.map((opt: string, i: number) => (
             <button
@@ -89,17 +92,26 @@ export default function FastQuizPage() {
   );
 }
 
-function ResultScreen({ score, folderId, router }: any) {
+function ResultScreen({
+  score,
+  correctCount,
+  totalCount,
+  folderId,
+  router,
+}: any) {
   return (
-    <div className=" flex items-center justify-center mt-12 bg-white">
+    <div className="flex items-center justify-center mt-12 bg-white">
       <div className="max-w-sm w-full border-4 border-black p-10 rounded-[40px] shadow-[15px_15px_0px_0px_#000] text-center bg-white">
         <Trophy size={60} className="text-green-600 mx-auto mb-4" />
         <h2 className="text-3xl font-black mb-1 uppercase italic tracking-tighter">
           Kết quả
         </h2>
-        <div className="text-8xl font-black leading-none mb-10 text-green-600 italic">
+        <div className="text-8xl font-black leading-none mb-4 text-green-600 italic">
           {score}%
         </div>
+        <p className="font-bold mb-8 uppercase text-xs text-slate-500 italic">
+          Bạn làm đúng {correctCount} / {totalCount} câu
+        </p>
         <button
           onClick={() => router.push(`/users/flashcard/${folderId}`)}
           className="w-full py-4 bg-green-600 text-white font-black border-2 border-black rounded-2xl shadow-lg hover:bg-green-700 transition-all uppercase italic text-sm"
