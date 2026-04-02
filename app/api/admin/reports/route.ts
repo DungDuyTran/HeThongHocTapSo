@@ -14,7 +14,10 @@ export async function GET(req: Request) {
 
     const [users, docs, folders] = await Promise.all([
       prisma.user.findMany({
-        where: dateFilter ? { ngayTao: dateFilter } : {},
+        where: {
+          vaiTro: "HocVien", 
+          ...(dateFilter ? { ngayTao: dateFilter } : {}),
+        },
       }),
       prisma.document.findMany({
         where: dateFilter ? { createdAt: dateFilter } : {},

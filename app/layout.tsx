@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lora, Geist } from "next/font/google";
 import "./globals.css";
+import ChatWrapper from "@/components/ChatWrapper";
 
 // Cấu hình Metadata để đổi tên trang web trên tab trình duyệt
 export const metadata: Metadata = {
@@ -34,6 +35,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${lora.variable} bg-white antialiased no-scrollbar`}
       >
         {children}
+        <ChatWrapper />
       </body>
     </html>
   );
