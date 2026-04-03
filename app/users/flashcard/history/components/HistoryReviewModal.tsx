@@ -8,8 +8,8 @@ export default function HistoryReviewModal({ data, onClose }: any) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-8">
       <div className="bg-white w-full max-w-3xl max-h-[90vh] border-4 border-black rounded-[32px] shadow-[15px_15px_0px_0px_#000] flex flex-col overflow-hidden relative">
-        <header className="p-6 border-b-4 border-black flex justify-between items-center bg-yellow-400 flex-shrink-0">
-          <h2 className="text-2xl font-black uppercase italic text-black truncate pr-4">
+        <header className="p-6 border-b-4 border-black flex justify-between items-center bg-green-600 flex-shrink-0">
+          <h2 className="flex justify-center text-2xl font-black uppercase italic text-white truncate pr-4">
             Bài làm: {data.folder.name}
           </h2>
           <button

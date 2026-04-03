@@ -65,7 +65,7 @@ export function useNote() {
       try {
         await axios.delete(`/api/note/${id}`);
         mutate();
-        notifier.warn("Đã tiễn một ghi chú lên đường! 🗑️");
+        notifier.warn("Đã tiễn một ghi chú lên đường! ");
       } catch (error) {
         notifier.error("Thất bại", "Không thể xóa ghi chú này.");
       }

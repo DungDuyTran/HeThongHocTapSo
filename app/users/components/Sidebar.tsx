@@ -11,22 +11,35 @@ import {
   FileText,
   StickyNote,
 } from "lucide-react";
+import { notifier } from "@/lib/notifier";
 
 export default function Sidebar({ isCollapsed }: { isCollapsed: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const handleLogout = async () => {
+    const isConfirmed = confirm(
+      "Bạn có chắc chắn muốn đăng xuất tài khoản không?",
+    );
+    if (!isConfirmed) return;
+
     try {
       const res = await fetch("/api/auth/logout", {
         method: "POST",
       });
 
       if (res.ok) {
-        router.push("/");
-        router.refresh();
+        notifier.success("Đã đăng xuất!", "Hẹn gặp lại bạn sớm nhé! ");
+
+        setTimeout(() => {
+          router.push("/");
+          router.refresh();
+        }, 1000);
+      } else {
+        notifier.error("Lỗi!", "Không thể đăng xuất vào lúc này.");
       }
     } catch (error) {
       console.error("Lỗi khi đăng xuất:", error);
+      notifier.error("Lỗi hệ thống!", "Vui lòng thử lại sau.");
     }
   };
 
