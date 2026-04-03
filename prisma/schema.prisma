@@ -21,6 +21,8 @@ model User {
   flashcardfolders   FlashcardFolder[]
   flashcardhistories FlashcardHistory[]
   hocvien            Hocvien?
+  auditLogs          AuditLog[]
+  chatHistories      ChatHistory[]
 
   @@map("user")
 }
@@ -74,7 +76,11 @@ model FlashcardHistory {
   totalQuestions Int
   correctAnswers Int
   timeSpent      Int
+<<<<<<< HEAD
   details        Json?
+=======
+  details        String?         @db.Text
+>>>>>>> 3f832e4d2336242deeba9b172654808bed278b25
   folderId       Int
   userId         Int
   createdAt      DateTime        @default(now())
@@ -145,6 +151,32 @@ model Note {
 
   @@index([userId], map: "idx_note_userId")
   @@map("note")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     
+  userName  String?  
+  action    String   
+  table     String?  
+  detail    String?  @db.Text 
+  type      String   
+  createdAt DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("auditlog")
+}
+
+model ChatHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  role      String   
+  message   String   @db.LongText
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chathistory")
 }
 
 enum Todo_priority {

@@ -3,14 +3,21 @@ import prisma from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const totalUsers = await prisma.user.count();
+    // 1. Chỉ đếm những người có vai trò là Học Viên
+    const totalUsers = await prisma.user.count({
+      where: { vaiTro: "HocVien" }
+    });
+
     const totalDocs = await prisma.document.count();
     
+    // 2. Đếm học viên mới đăng ký trong ngày hôm nay
     const activeToday = await prisma.user.count({
       where: {
+        vaiTro: "HocVien", 
         ngayTao: { gte: new Date(new Date().setHours(0, 0, 0, 0)) }
       }
     });
+
     const now = new Date();
     const chartData = [];
 
@@ -20,6 +27,7 @@ export async function GET() {
       
       const count = await prisma.user.count({
         where: {
+          vaiTro: "HocVien", 
           ngayTao: {
             lt: new Date(d.getFullYear(), d.getMonth() + 1, 1),
           }
@@ -36,6 +44,7 @@ export async function GET() {
       chartData 
     });
   } catch (error) {
+    console.error("Lỗi lấy thống kê:", error);
     return NextResponse.json({ error: "Lỗi lấy thống kê" }, { status: 500 });
   }
 }

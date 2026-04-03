@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DocumentService } from "@/lib/api/service/DocumentService";
+import prisma from "@/lib/prisma";
 
 const service = new DocumentService();
 
@@ -19,14 +20,30 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const userIdStr = req.headers.get("x-user-id");
+    const userName = req.headers.get("x-user-name") || "Học viên"; // Lấy thêm tên từ header nếu có
+
     if (!userIdStr)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    // Lưu vào database qua Service
+    const userId = parseInt(userIdStr);
+
+    // Lưu tài liệu vào database
     const newDoc = await service.createDoc({
       ...body,
-      userId: parseInt(userIdStr),
+      userId: userId,
+    });
+
+    
+    await prisma.auditLog.create({
+      data: {
+        userId: userId,
+        userName: userName,
+        action: "TẢI TÀI LIỆU",
+        table: "document",
+        detail: `Đã tải lên tài liệu mới: ${newDoc.title}`,
+        type: "SUCCESS", 
+      },
     });
 
     return NextResponse.json(newDoc, { status: 201 });

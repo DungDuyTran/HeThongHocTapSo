@@ -22,8 +22,31 @@ export function useAxios<T = unknown>() {
       setError(null);
 
       try {
+        // Lấy thông tin user hiện tại từ localStorage
+        const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+        const user = userStr ? JSON.parse(userStr) : null;
+
+        let finalBody = body;
+
+        // Nếu là lệnh DELETE, mình tự động nhét userId và userName vào body nếu chưa có
+        if (method === "DELETE" && user) {
+          finalBody = { 
+            ...body, 
+            userId: user.id, 
+            userName: user.hoTen // Đây là chìa khóa để hiện tên thật
+          };
+          console.log("Dữ liệu gửi đi nè bro:", finalBody);
+        }
+        
+        // Nếu là POST/PUT, mình cũng có thể đính kèm thêm userName vào body
+        if ((method === "POST" || method === "PUT") && user && body instanceof Object && !(body instanceof FormData)) {
+          finalBody = {
+            ...body,
+            userName: user.hoTen
+          };
+        }
         // request<T> từ axiosPublic đã được fix kiểu ở bước trước
-        const result = await request<T>(method, url, body);
+        const result = await request<T>(method, url, finalBody);
         setData(result);
         return result;
       } catch (err: unknown) {

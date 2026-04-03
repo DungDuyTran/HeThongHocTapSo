@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Lora, Geist } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
+import ChatWrapper from "@/components/ChatWrapper";
 
-// Cấu hình Metadata để đổi tên trang web trên tab trình duyệt
+// Cấu hình Metadata
 export const metadata: Metadata = {
   title: "Trợ lý học tập - Smart Study AI",
   description:
@@ -35,11 +36,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${lora.variable} bg-white antialiased no-scrollbar`}
       >
         {children}
+
+        {/* Render cả ChatWrapper của bạn mình và Toaster của mình */}
+        <ChatWrapper />
         <Toaster
           position="top-right"
           richColors
           closeButton
-          // Cấu hình style để khớp với notifier.ts của Dũng
+          // Cấu hình style "ngầu" mà bạn đã viết trong notifier.ts
           toastOptions={{
             style: {
               background: "white",
