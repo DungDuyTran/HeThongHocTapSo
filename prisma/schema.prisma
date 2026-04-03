@@ -76,14 +76,11 @@ model FlashcardHistory {
   totalQuestions Int
   correctAnswers Int
   timeSpent      Int
-<<<<<<< HEAD
-  details        Json?
-=======
-  details        String?         @db.Text
->>>>>>> 3f832e4d2336242deeba9b172654808bed278b25
+  details        Json?           // Đã chọn bản Json để lưu chi tiết bài thi xịn hơn
   folderId       Int
   userId         Int
   createdAt      DateTime        @default(now())
+  
   folder         FlashcardFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
