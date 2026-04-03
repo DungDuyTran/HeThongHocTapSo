@@ -5,19 +5,42 @@ import ScheduleHeader from "./components/ScheduleHeader";
 import ScheduleView from "./components/ScheduleView";
 import EventModal from "./components/EventModal";
 import CategoryModal from "./components/CategoryModal";
+import { notifier } from "@/lib/notifier"; // Import notifier
 
 export default function SchedulePage() {
   const { events, categories, popups, setPopups, form, setForm, sync } =
     useSchedule();
 
-  // Logic xử lý lưu và xóa tập trung tại đây để dễ kiểm soát
+  // Logic xử lý lưu
   const handleSave = () => {
+    if (!form.title.trim()) {
+      notifier.error("Thiếu thông tin!", "Dũng ơi, nhập tên hoạt động đã nhé.");
+      return;
+    }
+
     const cate = categories.find((c) => c.id === form.categoryId);
     const data = { ...form, backgroundColor: cate?.color || "#16a34a" };
-    popups.add
-      ? sync([...events, { ...data, id: crypto.randomUUID() }])
-      : sync(events.map((e) => (e.id === form.id ? data : e)));
+
+    if (popups.add) {
+      sync([...events, { ...data, id: crypto.randomUUID() }]);
+      notifier.success("Tuyệt vời!", "Đã thêm lịch học mới vào hệ thống.");
+    } else {
+      sync(events.map((e) => (e.id === form.id ? data : e)));
+      notifier.success(
+        "Cập nhật thành công!",
+        "Thông tin lịch trình đã thay đổi.",
+      );
+    }
+
     setPopups({ ...popups, add: false, edit: false });
+  };
+
+  const handleDelete = () => {
+    if (confirm("Bạn chắc chắn muốn xóa hoạt động này chứ?")) {
+      sync(events.filter((e) => e.id !== form.id));
+      notifier.warn("Hoạt động đã được gỡ khỏi lịch.");
+      setPopups({ ...popups, edit: false });
+    }
   };
 
   return (
@@ -26,15 +49,19 @@ export default function SchedulePage() {
 
       <ScheduleView
         events={events}
-        onEventChange={(fc: any) =>
+        onEventChange={(fc: any) => {
           sync(
             events.map((e) =>
               e.id === fc.id
                 ? { ...e, start: fc.startStr, end: fc.endStr || fc.startStr }
                 : e,
             ),
-          )
-        }
+          );
+          notifier.info(
+            "Đã dời lịch!",
+            "Thời gian hoạt động đã được thay đổi.",
+          );
+        }}
         onDateSelect={(info: any) => {
           setForm({
             id: "",
@@ -63,12 +90,7 @@ export default function SchedulePage() {
           categories={categories}
           onClose={() => setPopups({ ...popups, add: false, edit: false })}
           onSave={handleSave}
-          onDelete={() => {
-            if (confirm("Xóa?")) {
-              sync(events.filter((e) => e.id !== form.id));
-              setPopups({ ...popups, edit: false });
-            }
-          }}
+          onDelete={handleDelete}
         />
       )}
 

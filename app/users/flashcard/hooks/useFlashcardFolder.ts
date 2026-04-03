@@ -2,6 +2,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import axios from "axios";
+import { notifier } from "@/lib/notifier"; // Thêm notifier
 
 const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
@@ -11,59 +12,57 @@ export function useFlashcardFolder() {
     mutate,
     isLoading,
   } = useSWR("/api/flashcard/folder", fetcher);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Trạng thái quản lý việc đang sửa thư mục nào
   const [editingFolder, setEditingFolder] = useState<any>(null);
 
-  // Mở Modal để sửa
   const openEditModal = (folder: any) => {
     setEditingFolder(folder);
     setNewFolderName(folder.name);
     setIsModalOpen(true);
   };
 
-  // Đóng và reset modal
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingFolder(null);
     setNewFolderName("");
   };
 
-  // Logic Xóa thư mục
   const handleDeleteFolder = async (id: number) => {
-    if (!confirm("bạn chắc chắn muốn xóa toàn bộ thư mục này chứ?")) return;
+    if (!confirm("Xóa toàn bộ thư mục này chứ?")) return;
     try {
       await axios.delete(`/api/flashcard/folder?id=${id}`);
-      mutate(); // Cập nhật UI ngay lập tức
+      mutate();
+      notifier.warn("Đã xóa thư mục!");
     } catch (error) {
-      console.error("Lỗi xóa thư mục:", error);
+      notifier.error("Lỗi xóa thư mục");
     }
   };
 
-  // Logic Lưu (Tạo mới hoặc Cập nhật)
   const handleSaveFolder = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newFolderName.trim()) return;
+    if (!newFolderName.trim()) {
+      notifier.warn("Vui lòng nhập tên thư mục!");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       if (editingFolder) {
-        // Cập nhật tên thư mục
         await axios.patch("/api/flashcard/folder", {
           id: editingFolder.id,
           name: newFolderName,
         });
+        notifier.success("Đã cập nhật thư mục!");
       } else {
         await axios.post("/api/flashcard/folder", { name: newFolderName });
+        notifier.success("Tạo thư mục thành công!");
       }
       closeModal();
       mutate();
     } catch (error) {
-      console.error("Lỗi lưu thư mục:", error);
+      notifier.error("Lỗi lưu thư mục!");
     } finally {
       setIsSubmitting(false);
     }

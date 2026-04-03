@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lora, Geist } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "sonner";
 
 // Cấu hình Metadata để đổi tên trang web trên tab trình duyệt
 export const metadata: Metadata = {
@@ -34,6 +35,20 @@ export default function RootLayout({
         className={`${geistSans.variable} ${lora.variable} bg-white antialiased no-scrollbar`}
       >
         {children}
+        <Toaster
+          position="top-right"
+          richColors
+          closeButton
+          // Cấu hình style để khớp với notifier.ts của Dũng
+          toastOptions={{
+            style: {
+              background: "white",
+              border: "2px solid black",
+              boxShadow: "4px 4px 0px 0px rgba(0,0,0,1)",
+              borderRadius: "16px",
+            },
+          }}
+        />
       </body>
     </html>
   );

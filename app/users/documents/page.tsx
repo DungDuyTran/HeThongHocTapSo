@@ -5,13 +5,14 @@ import { DocumentHeader } from "./components/DocumentHeader";
 import { DocumentTable } from "./components/DocumentTable";
 import { UploadModal } from "./components/UploadModal";
 import { X, Copy, ExternalLink, Check } from "lucide-react";
+import { notifier } from "@/lib/notifier";
 
 export default function DocumentPage() {
   const { documents, addDoc, removeDoc, loading } = useDocument();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [originalUrl, setOriginalUrl] = useState<string>(""); // Lưu URL gốc để phản biện
+  const [originalUrl, setOriginalUrl] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
   const handleDelete = async (id: number) => {
@@ -27,7 +28,6 @@ export default function DocumentPage() {
     if (t.includes("pdf")) {
       setPreviewUrl(url);
     } else {
-      // Dùng Office Viewer cho các file docx, xlsx...
       setPreviewUrl(
         `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`,
       );
@@ -37,6 +37,8 @@ export default function DocumentPage() {
   const copyToClipboard = () => {
     navigator.clipboard.writeText(originalUrl);
     setCopied(true);
+    // Báo sao chép thành công
+    notifier.success("Thành công!", "Đã sao chép đường dẫn tài liệu.");
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -97,7 +99,6 @@ export default function DocumentPage() {
               </button>
             </div>
 
-            {/* NỘI DUNG TÀI LIỆU */}
             <div className="flex-1 bg-slate-200">
               <iframe
                 src={previewUrl}

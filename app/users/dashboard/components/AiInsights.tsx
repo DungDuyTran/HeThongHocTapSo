@@ -24,10 +24,10 @@ export default function AiInsights({
         <div className="p-5 bg-green-50/50 rounded-2xl border-2 border-dashed border-green-600 text-sm font-bold text-green-800 italic flex items-center">
           {stats.todoPending > 0
             ? `${name} ơi, còn ${stats.todoPending} việc chưa xong. Cố gắng dứt điểm nhé!`
-            : "Tuyệt vời! Dũng đã hoàn thành mọi mục tiêu."}
+            : "Tuyệt vời! Bạn đã hoàn thành mọi mục tiêu."}
         </div>
         <div className="p-5 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 text-sm font-bold text-slate-500 italic flex items-center">
-          Mẹo: Dành 15 phút Flashcard mỗi tối giúp ghi nhớ kiến thức DTU tốt hơn
+          Mẹo: Dành 15 phút Flashcard mỗi tối giúp ghi nhớ kiến thức tốt hơn
           40%.
         </div>
       </div>

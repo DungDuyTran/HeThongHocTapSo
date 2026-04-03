@@ -30,10 +30,15 @@ export async function POST(req: Request) {
     if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Đổi tên biến cho khớp với Hook gửi lên
-    const { folderId, correctAnswers, totalQuestions, timeSpent, score } = body;
+    const {
+      folderId,
+      correctAnswers,
+      totalQuestions,
+      timeSpent,
+      score,
+      details,
+    } = body;
 
-    // Tránh lỗi chia cho 0 nếu totalQuestions bị undefined hoặc bằng 0
     const finalScore = totalQuestions > 0 ? score : 0;
 
     const history = await prisma.flashcardHistory.create({
@@ -44,6 +49,7 @@ export async function POST(req: Request) {
         totalQuestions: totalQuestions || 0,
         score: finalScore || 0,
         timeSpent: timeSpent || 0,
+        details: details || null, // LƯU CHI TIẾT BÀI LÀM VÀO ĐÂY
       },
     });
 

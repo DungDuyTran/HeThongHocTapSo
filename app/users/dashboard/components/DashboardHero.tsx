@@ -14,7 +14,7 @@ export default function DashboardHero({ name }: { name: string }) {
       <div className="relative z-10">
         <h1 className="text-4xl md:text-5xl font-black text-black mb-4 uppercase tracking-tighter italic leading-[0.9]">
           Hệ sinh thái <br />
-          <span className="text-green-600 underline decoration-black decoration-4 underline-offset-8">
+          <span className="text-green-600 underline decoration-black decoration-4 underline-offset-8 mt-2">
             Học tập thông minh
           </span>
         </h1>

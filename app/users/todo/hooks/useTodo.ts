@@ -4,10 +4,10 @@ import useSWR from "swr";
 import axios from "axios";
 import { format } from "date-fns";
 import { useTodoStore } from "@/stores/useTodoStore";
+import { notifier } from "@/lib/notifier"; // Nhớ import notifier nhé
 
 const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
-// Tạo bộ từ điển trọng số để dễ so sánh Priority
 const priorityWeight: Record<string, number> = {
   HIGH: 3,
   MEDIUM: 2,
@@ -26,11 +26,9 @@ export function useTodo() {
     isLoading,
   } = useSWR(`/api/todo?date=${dateStr}`, fetcher);
 
-  // LOGIC SẮP XẾP DỮ LIỆU
   const sortedTodos = useMemo(() => {
     if (!todos) return [];
 
-    // Tạo bản sao của mảng để không mutate data gốc của SWR
     return [...todos].sort((a, b) => {
       // 1. So sánh trạng thái hoàn thành (Chưa làm lên trên, đã làm xuống dưới)
       if (a.status !== b.status) {
@@ -46,48 +44,68 @@ export function useTodo() {
     });
   }, [todos]);
 
-  // Cập nhật trạng thái hoàn thành
   const handleToggle = async (id: number, currentStatus: boolean) => {
-    // Optimistic UI update (Tùy chọn: giúp UI phản hồi mượt hơn trước khi gọi API xong)
-    mutate(
-      todos.map((t: any) =>
-        t.id === id ? { ...t, status: !currentStatus } : t,
-      ),
-      false,
-    );
+    try {
+      mutate(
+        todos.map((t: any) =>
+          t.id === id ? { ...t, status: !currentStatus } : t,
+        ),
+        false,
+      );
 
-    await axios.patch(`/api/todo/${id}`, { status: !currentStatus });
-    mutate(); // Re-fetch dữ liệu ngầm để UI luôn mới
+      await axios.patch(`/api/todo/${id}`, { status: !currentStatus });
+      mutate();
+
+      // Hiện thông báo khi check hoàn thành (tùy chọn)
+      if (!currentStatus) {
+        notifier.success("Tuyệt vời!", "Đã hoàn thành nhiệm vụ.");
+      }
+    } catch (error) {
+      notifier.error("Lỗi!", "Cập nhật trạng thái thất bại.");
+    }
   };
 
-  // Logic lưu dữ liệu (Cả thêm và sửa)
   const handleSaveTodo = async (formData: any) => {
+    // Check rỗng với 1 tham số như Dũng nhắc nhở
+    if (!formData.title?.trim()) {
+      notifier.warn("Tên nhiệm vụ không được để trống!");
+      return;
+    }
+
     try {
       if (formData.id) {
         await axios.patch(`/api/todo/${formData.id}`, formData);
+        notifier.success("Thành công!", "Đã cập nhật nhiệm vụ.");
       } else {
         await axios.post("/api/todo", {
           ...formData,
           targetDate: selectedDate,
         });
+        notifier.success("Thành công!", "Đã tạo nhiệm vụ mới.");
       }
       setIsModalOpen(false);
       setEditingTodo(null);
       mutate();
     } catch (err) {
-      alert("Lỗi lưu nhiệm vụ!");
+      notifier.error("Thất bại!", "Lỗi lưu nhiệm vụ!");
     }
   };
 
   const handleDelete = async (id: number) => {
     if (confirm("Xác nhận xóa?")) {
-      await axios.delete(`/api/todo/${id}`);
-      mutate();
+      try {
+        await axios.delete(`/api/todo/${id}`);
+        // Hàm warn chỉ truyền 1 tham số
+        notifier.warn("Đã xóa nhiệm vụ!");
+        mutate();
+      } catch (error) {
+        notifier.error("Lỗi!", "Không thể xóa nhiệm vụ lúc này.");
+      }
     }
   };
 
   return {
-    todos: sortedTodos, // Trả về mảng đã được sắp xếp
+    todos: sortedTodos,
     selectedDate,
     isModalOpen,
     setIsModalOpen,

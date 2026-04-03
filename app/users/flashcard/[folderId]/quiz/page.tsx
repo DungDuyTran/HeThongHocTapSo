@@ -1,10 +1,9 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import useSWR from "swr";
-// Đảm bảo import đúng biến 'correct' từ hook của bạn
 import { useQuizLogic } from "../../hooks/useQuizLogic";
-import { Clock, Trophy, ArrowLeft, Target } from "lucide-react";
+import { Clock, Trophy, ArrowLeft, Target, Eye, X } from "lucide-react";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
@@ -17,9 +16,15 @@ export default function FastQuizPage() {
     { revalidateOnFocus: false },
   );
 
-  // 1. PHẢI lấy thêm biến 'correct' ở đây
-  const { index, timer, isFinished, handleAnswer, current, correct } =
-    useQuizLogic(folderId as string, quizData || []);
+  const {
+    index,
+    timer,
+    isFinished,
+    handleAnswer,
+    current,
+    correct,
+    userAnswers,
+  } = useQuizLogic(folderId as string, quizData || []);
 
   if (isLoading)
     return (
@@ -31,12 +36,12 @@ export default function FastQuizPage() {
   if (isFinished)
     return (
       <ResultScreen
-        // 2. Dùng 'correct' để tính điểm thực tế, không dùng 'index'
         score={Math.round((correct / quizData.length) * 100)}
         correctCount={correct}
         totalCount={quizData.length}
         folderId={folderId}
         router={router}
+        userAnswers={userAnswers} // Truyền data review
       />
     );
 
@@ -60,7 +65,6 @@ export default function FastQuizPage() {
           </div>
         </header>
 
-        {/* THẺ CÂU HỎI */}
         <div className="mb-10 p-12 bg-white border-4 border-black rounded-[40px] shadow-[15px_15px_0px_0px_#000] min-h-[220px] flex flex-col items-center justify-center relative overflow-hidden">
           <div className="flex items-center gap-2 mb-4 text-slate-400 font-black uppercase text-[10px] tracking-widest">
             <Target size={14} className="text-green-600" /> Question
@@ -70,7 +74,6 @@ export default function FastQuizPage() {
           </h2>
         </div>
 
-        {/* 4 ĐÁP ÁN */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {current?.options.map((opt: string, i: number) => (
             <button
@@ -98,7 +101,74 @@ function ResultScreen({
   totalCount,
   folderId,
   router,
+  userAnswers,
 }: any) {
+  const [showReview, setShowReview] = useState(false);
+
+  if (showReview) {
+    return (
+      <div className="max-w-3xl mx-auto p-6 mt-6 bg-white min-h-screen">
+        <header className="flex justify-between items-center mb-8 border-b-4 border-black pb-4">
+          <h2 className="text-3xl font-black uppercase italic">
+            Xem lại bài làm
+          </h2>
+          <button
+            onClick={() => setShowReview(false)}
+            className="p-2 border-2 border-black rounded-xl hover:bg-red-500 hover:text-white transition-colors"
+          >
+            <X size={24} strokeWidth={3} />
+          </button>
+        </header>
+        <div className="space-y-6">
+          {userAnswers.map((ans: any, i: number) => (
+            <div
+              key={i}
+              className="p-6 border-4 border-black rounded-[24px] shadow-[8px_8px_0px_0px_#000] bg-white"
+            >
+              <h3 className="text-xl font-black uppercase italic mb-4">
+                Câu {i + 1}: {ans.front}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {ans.options.map((opt: string, j: number) => {
+                  const isCorrectAnswer = opt === ans.correctAnswer;
+                  const isUserChoice = opt === ans.userChoice;
+
+                  // Logic đổi màu Neo-Brutalism
+                  let bgClass = "bg-slate-50 border-black"; // Mặc định
+                  if (isCorrectAnswer)
+                    bgClass = "bg-green-400 border-black text-black"; // Đáp án chuẩn
+                  else if (isUserChoice && !isCorrectAnswer)
+                    bgClass = "bg-red-500 border-black text-white"; // Chọn sai
+
+                  return (
+                    <div
+                      key={j}
+                      className={`p-4 border-[3px] rounded-xl font-bold uppercase italic flex justify-between items-center ${bgClass}`}
+                    >
+                      <span>
+                        {String.fromCharCode(65 + j)}. {opt}
+                      </span>
+                      {isCorrectAnswer && (
+                        <span className="text-[10px] bg-black text-white px-2 py-1 rounded-md">
+                          ĐÚNG
+                        </span>
+                      )}
+                      {isUserChoice && !isCorrectAnswer && (
+                        <span className="text-[10px] bg-white text-red-500 px-2 py-1 rounded-md">
+                          BẠN CHỌN
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-center mt-12 bg-white">
       <div className="max-w-sm w-full border-4 border-black p-10 rounded-[40px] shadow-[15px_15px_0px_0px_#000] text-center bg-white">
@@ -112,12 +182,20 @@ function ResultScreen({
         <p className="font-bold mb-8 uppercase text-xs text-slate-500 italic">
           Bạn làm đúng {correctCount} / {totalCount} câu
         </p>
-        <button
-          onClick={() => router.push(`/users/flashcard/${folderId}`)}
-          className="w-full py-4 bg-green-600 text-white font-black border-2 border-black rounded-2xl shadow-lg hover:bg-green-700 transition-all uppercase italic text-sm"
-        >
-          Hoàn tất
-        </button>
+        <div className="space-y-3">
+          <button
+            onClick={() => setShowReview(true)}
+            className="w-full py-4 bg-amber-400 text-black font-black border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] hover:translate-y-1 hover:shadow-none transition-all uppercase italic text-sm flex justify-center items-center gap-2"
+          >
+            <Eye size={18} strokeWidth={3} /> Xem lại đáp án
+          </button>
+          <button
+            onClick={() => router.push(`/users/flashcard/${folderId}`)}
+            className="w-full py-4 bg-green-600 text-white font-black border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] hover:translate-y-1 hover:shadow-none transition-all uppercase italic text-sm"
+          >
+            Hoàn tất
+          </button>
+        </div>
       </div>
     </div>
   );

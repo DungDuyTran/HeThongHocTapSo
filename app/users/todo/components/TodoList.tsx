@@ -23,7 +23,7 @@ export default function TodoList() {
       <div className="max-w-4xl mx-auto">
         <header className="mb-6 border-b-[4px] border-black pb-4 flex justify-between items-center">
           <div>
-            <p className="text-blue-700 font-black uppercase text-[10px]">
+            <p className="text-green-700 font-black uppercase text-[10px]">
               Tasks
             </p>
             <h1 className="text-4xl font-black italic">
@@ -39,7 +39,7 @@ export default function TodoList() {
                 setEditingTodo(null);
                 setIsModalOpen(true);
               }}
-              className="p-2 bg-blue-600 text-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_#000]"
+              className="p-2 bg-green-600 text-white border-[3px] border-black rounded-xl shadow-[4px_4px_0px_0px_#000]"
             >
               <Plus size={24} strokeWidth={4} />
             </button>

@@ -1,13 +1,14 @@
 "use client";
+import { useState, useMemo } from "react";
 import useSWR from "swr";
-import axios from "axios";
-import { useMemo } from "react";
 
-const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-export function useFlashcardHistory(
-  timeRange: "week" | "month" | "year" = "week",
-) {
+export function useFlashcardHistory() {
+  const [timeRange, setTimeRange] = useState<"week" | "month" | "year">("week");
+  const [viewMode, setViewMode] = useState<"score" | "count">("score");
+  const [selectedHistory, setSelectedHistory] = useState<any>(null);
+
   const { data: history, isLoading } = useSWR(
     "/api/flashcard/history",
     fetcher,
@@ -19,7 +20,7 @@ export function useFlashcardHistory(
     const dataMap: { [key: string]: { scoreTotal: number; count: number } } =
       {};
 
-    // 1. Khởi tạo mốc thời gian (Tuần: T2->CN | Tháng: 1->Nay)
+    // Khởi tạo mốc thời gian
     if (timeRange === "week") {
       const day = now.getDay();
       const diff = now.getDate() - day + (day === 0 ? -6 : 1);
@@ -41,13 +42,14 @@ export function useFlashcardHistory(
         dataMap[`Tháng ${i + 1}`] = { scoreTotal: 0, count: 0 };
     }
 
-    // 2. Đổ dữ liệu từ API vào biểu đồ
+    // Đổ dữ liệu
     history.forEach((item: any) => {
       const itemDate = new Date(item.createdAt);
       const label =
         timeRange === "year"
           ? `Tháng ${itemDate.getMonth() + 1}`
           : `${itemDate.getDate()}/${itemDate.getMonth() + 1}`;
+
       if (dataMap[label]) {
         dataMap[label].scoreTotal += item.score;
         dataMap[label].count += 1;
@@ -64,5 +66,15 @@ export function useFlashcardHistory(
     }));
   }, [history, timeRange]);
 
-  return { history, chartData, isLoading };
+  return {
+    history,
+    chartData,
+    isLoading,
+    timeRange,
+    setTimeRange,
+    viewMode,
+    setViewMode,
+    selectedHistory,
+    setSelectedHistory,
+  };
 }

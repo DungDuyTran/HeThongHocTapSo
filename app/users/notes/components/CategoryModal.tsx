@@ -1,5 +1,7 @@
+"use client";
 import { useState } from "react";
 import { X, Plus, Trash2, Edit3, Check } from "lucide-react";
+import { notifier } from "@/lib/notifier"; // Import notifier
 
 export default function CategoryModal({
   isOpen,
@@ -12,8 +14,12 @@ export default function CategoryModal({
   const [editingId, setEditingId] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
   const handleSave = () => {
-    if (!newCatName.trim()) return;
+    if (!newCatName.trim()) {
+      notifier.warn("Hãy đặt tên cho thể loại!");
+      return;
+    }
 
     if (editingId) {
       const updatedCats = categories.map((c: any) =>
@@ -23,14 +29,15 @@ export default function CategoryModal({
       );
       syncCategories(updatedCats);
       setEditingId(null);
+      notifier.success("Đã cập nhật!", "Thông tin thể loại đã thay đổi.");
     } else {
-      // Tạo mới
       const newCat = {
         id: Date.now().toString(),
         name: newCatName.toUpperCase(),
         color: newCatColor,
       };
       syncCategories([...categories, newCat]);
+      notifier.success("Thành công!", "Đã thêm thể loại mới vào danh sách.");
     }
 
     setNewCatName("");
@@ -44,13 +51,10 @@ export default function CategoryModal({
   };
 
   const handleDelete = (id: string) => {
-    if (
-      confirm(
-        "Xóa thể loại này? Các ghi chú cũ vẫn sẽ giữ nguyên chữ, chỉ mất màu.",
-      )
-    ) {
+    if (confirm("Xóa thể loại này? Các ghi chú cũ sẽ mất màu sắc.")) {
       syncCategories(categories.filter((c: any) => c.id !== id));
       if (editingId === id) setEditingId(null);
+      notifier.warn("Đã xóa thể loại!");
     }
   };
 
@@ -67,7 +71,6 @@ export default function CategoryModal({
           Quản Lý Thể Loại
         </h2>
 
-        {/* Form Nhập liệu */}
         <div className="flex gap-2 mb-6 p-4 bg-slate-50 border-2 border-black rounded-2xl">
           <input
             type="color"
@@ -80,15 +83,20 @@ export default function CategoryModal({
             placeholder="Tên loại..."
             value={newCatName}
             onChange={(e) => setNewCatName(e.target.value)}
-            className="flex-1 p-2 border-2 border-black rounded-xl font-bold uppercase"
+            className="flex-1 p-2 border-2 border-black rounded-xl font-bold uppercase outline-none"
           />
           <button
             onClick={handleSave}
-            className={`p-3 text-white rounded-xl border-2 border-black transition-colors ${editingId ? "bg-green-600 hover:bg-green-700" : "bg-black hover:bg-slate-800"}`}
+            className={`p-3 text-white rounded-xl border-2 border-black transition-colors ${
+              editingId
+                ? "bg-green-600 hover:bg-green-700"
+                : "bg-black hover:bg-slate-800"
+            }`}
           >
             {editingId ? <Check size={20} /> : <Plus size={20} />}
           </button>
         </div>
+
         <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
           {categories.map((cat: any) => (
             <div
@@ -100,7 +108,9 @@ export default function CategoryModal({
                   className="w-6 h-6 rounded-full border-2 border-black"
                   style={{ backgroundColor: cat.color }}
                 ></div>
-                <span className="font-black uppercase italic">{cat.name}</span>
+                <span className="font-black uppercase italic text-xs">
+                  {cat.name}
+                </span>
               </div>
               <div className="flex gap-1">
                 <button

@@ -23,7 +23,9 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await TodoService.removeTodo(parseInt(id));
+
+    await TodoService.deleteTodo(parseInt(id));
+
     return NextResponse.json({ message: "Xóa thành công" });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 400 });
