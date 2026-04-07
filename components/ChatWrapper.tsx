@@ -6,7 +6,7 @@ export default function ChatWrapper() {
   const pathname = usePathname();
   
   // Danh sách các trang KHÔNG hiện bot
-  const publicPaths = ["/", "/login", "/register"];
+  const publicPaths = ["/", "/auth/login", "/auth/register"];
   const showChat = !publicPaths.includes(pathname);
 
   if (!showChat) return null;

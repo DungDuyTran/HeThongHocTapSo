@@ -22,33 +22,35 @@ export function useAxios<T = unknown>() {
       setError(null);
 
       try {
-        // Lấy thông tin user hiện tại từ localStorage
         const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
         const user = userStr ? JSON.parse(userStr) : null;
 
         let finalBody = body;
+        let headers: any = {};
 
-        // Nếu là lệnh DELETE, mình tự động nhét userId và userName vào body nếu chưa có
-        if (method === "DELETE" && user) {
-          finalBody = { 
-            ...body, 
-            userId: user.id, 
-            userName: user.hoTen // Đây là chìa khóa để hiện tên thật
-          };
-          console.log("Dữ liệu gửi đi nè bro:", finalBody);
-        }
-        
-        // Nếu là POST/PUT, mình cũng có thể đính kèm thêm userName vào body
-        if ((method === "POST" || method === "PUT") && user && body instanceof Object && !(body instanceof FormData)) {
+        if (user) {
+    // 1. Chuẩn bị Header (Cho các API dùng Header như Upload tài liệu)
+          headers["x-user-id"] = user.id.toString();
+          headers["x-user-name"] = user.hoTen;
+
+    // 2. Chuẩn bị Body (Cho API dùng Body như Xóa tài liệu)
+        if (method === "DELETE" || method === "POST" || method === "PUT") {
+        if (!(body instanceof FormData)) {
           finalBody = {
-            ...body,
+            ...(body as object),
+            userId: user.id,
             userName: user.hoTen
           };
-        }
-        // request<T> từ axiosPublic đã được fix kiểu ở bước trước
-        const result = await request<T>(method, url, finalBody);
-        setData(result);
-        return result;
+       }
+    }
+  }
+
+  // 3. Truyền cả finalBody và headers vào request
+  // Lưu ý: Bro phải xem hàm request trong axiosPublic có hỗ trợ nhận tham số thứ 4 là headers không nhé
+  const result = await request<T>(method, url, finalBody); 
+  
+  setData(result);
+  return result;
       } catch (err: unknown) {
         console.error("API Error:", err);
 

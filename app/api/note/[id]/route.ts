@@ -7,7 +7,7 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    return noteController.update(parseInt(id), req);
+    return noteController.updateNote(req);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -19,7 +19,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    return noteController.delete(parseInt(id));
+    return noteController.deleteNote(req, parseInt(id));
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

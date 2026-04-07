@@ -1,25 +1,69 @@
 "use client";
 
-import { MessageCircle, X, Send, Bot, User } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 export const ChatAI = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: "Chào bro! Tui là AI hỗ trợ học tập. Bro cần giúp gì không?" }
-  ]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 1. Hàm lấy lịch sử từ Database
+  const fetchHistory = useCallback(async () => {
+    const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const user = userStr ? JSON.parse(userStr) : null;
+    
+    if (!user?.id) return;
+
+    setIsFetchingHistory(true);
+    try {
+      const res = await fetch(`/api/ai/history?userId=${user.id}`);
+      const data = await res.json();
+      
+      if (data && data.length > 0) {
+        setMessages(data);
+      } else {
+        // Nếu chưa có lịch sử, hiện câu chào mặc định
+        setMessages([{ 
+          role: "assistant", 
+          content: "Chào bro! Tui là Smart Study AI đây. Bro cần tra cứu tài liệu hay hỏi gì không? 😉" 
+        }]);
+      }
+    } catch (err) {
+      console.error("Lỗi lấy lịch sử:", err);
+    } finally {
+      setIsFetchingHistory(false);
+    }
+  }, []);
+
+  // 2. Tự động load lịch sử khi người dùng nhấn MỞ hộp chat
+  useEffect(() => {
+    if (isOpen) {
+      fetchHistory();
+    }
+  }, [isOpen, fetchHistory]);
+
   const scrollToBottom = () => {
-  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-};
-useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages, loading]);
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
+
+    const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    if (!user?.id) {
+      setMessages((prev) => [...prev, { role: "assistant", content: "Bro cần đăng nhập để tui biết bro là ai nhé! 🔐" }]);
+      return;
+    }
 
     const userMsg = { role: "user", content: input };
     setMessages((prev) => [...prev, userMsg]);
@@ -27,67 +71,98 @@ useEffect(() => {
     setLoading(true);
 
     try {
-      // Gọi tới API Route của Next.js (sẽ tạo ở Bước 2)
       const res = await fetch("/api/ai/chat", {
         method: "POST",
-        body: JSON.stringify({ message: input }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input, userId: user.id }),
       });
-      const data = await res.json();
       
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      const data = await res.json();
+      if (res.ok) {
+        setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      } else {
+        throw new Error(data.reply);
+      }
     } catch (err) {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Lỗi kết nối rồi bro ơi!" }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "Lỗi kết nối AI rồi bro ơi! Thử lại sau nhé. 😅" }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      {/* NÚT LOGO TRÒN */}
+    <div className="fixed bottom-6 right-6 z-[100]">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 transition-all active:scale-95"
+        className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-110 transition-all active:translate-y-1 active:shadow-none"
       >
-        {isOpen ? <X size={28} /> : <MessageCircle size={28} />}
+        {isOpen ? <X size={32} /> : <MessageCircle size={32} />}
       </button>
 
-      {/* KHUNG CHAT */}
       {isOpen && (
-        <div className="absolute bottom-16 right-0 w-80 md:w-96 h-[500px] bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
-          {/* Header */}
-          <div className="p-4 bg-blue-600 text-white flex items-center gap-2">
-            <Bot size={24} />
-            <span className="font-bold">AI Assistant</span>
+        <div className="absolute bottom-20 right-0 w-[350px] md:w-[400px] h-[550px] bg-white rounded-[32px] border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
+          
+          <div className="p-5 bg-blue-600 text-white border-b-4 border-black flex items-center gap-3">
+            <div className="p-2 bg-white rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+              <Bot size={24} className="text-black" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-black uppercase italic tracking-tight">AI Assistant</span>
+              <span className="text-[10px] font-bold uppercase opacity-80">Đang trực tuyến</span>
+            </div>
           </div>
 
-          {/* Nội dung Chat */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50">
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${
-                  msg.role === 'user' ? 'bg-blue-500 text-white rounded-tr-none' : 'bg-white text-slate-700 shadow-sm rounded-tl-none'
-                }`}>
-                  {msg.content}
-                </div>
+          <div className="flex-1 overflow-y-auto p-5 space-y-6 bg-[#f8fafc]">
+            {isFetchingHistory ? (
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
+                <Loader2 className="animate-spin" size={32} />
+                <span className="font-bold text-xs uppercase italic">Đang nhớ lại...</span>
               </div>
-            ))}
-            {loading && <div className="text-xs text-slate-400 italic">AI đang suy nghĩ...</div>}
+            ) : (
+              <>
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`flex items-end gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div className={`w-9 h-9 rounded-full border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0 ${
+                      msg.role === 'user' ? 'bg-yellow-400' : 'bg-white'
+                    }`}>
+                      {msg.role === 'user' ? <User size={18} className="text-black" /> : <Bot size={18} className="text-blue-600" />}
+                    </div>
+
+                    <div className={`max-w-[75%] p-4 rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-sm font-bold leading-relaxed ${
+                      msg.role === 'user' 
+                      ? 'bg-blue-500 text-white rounded-br-none' 
+                      : 'bg-white text-slate-800 rounded-bl-none'
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+            
+            {loading && (
+              <div className="flex items-center gap-2 text-slate-400 font-black italic text-xs ml-12">
+                <Loader2 size={14} className="animate-spin" />
+                AI đang lục lọi database...
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Ô nhập liệu */}
-          <div className="p-3 border-t bg-white flex gap-2">
+          <div className="p-4 bg-white border-t-4 border-black flex gap-3">
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Hỏi gì đó đi bro..."
-              className="flex-1 bg-slate-100 px-4 py-2 rounded-full text-sm outline-none focus:ring-1 focus:ring-blue-400"
+              placeholder="Hỏi tui gì đi bro..."
+              className="flex-1 bg-slate-50 border-2 border-black px-4 py-3 rounded-xl text-sm font-bold outline-none focus:bg-white transition-all"
             />
-            <button title="Chat" onClick={handleSendMessage} className="p-2 bg-blue-600 text-white rounded-full">
-              <Send size={18} />
+            <button title="Gửi"
+              onClick={handleSendMessage} 
+              className="p-3 bg-yellow-400 border-2 border-black rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-500 active:translate-y-0.5 active:shadow-none transition-all"
+            >
+              <Send size={20} className="text-black" />
             </button>
           </div>
         </div>

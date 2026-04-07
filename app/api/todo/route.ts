@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { TodoService } from "@/lib/api/service/TodoService";
+import prisma from "@/lib/prisma";
 
 export async function GET(req: Request) {
   try {
@@ -23,7 +24,26 @@ export async function POST(req: Request) {
     const body = await req.json();
     const userId = parseInt(req.headers.get("x-user-id") || "0");
 
+    if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const data = await TodoService.saveTodo(userId, body);
+    if (data) {
+      // Lấy tên user để hiện lên Dashboard 
+      const user = await prisma.user.findUnique({ 
+        where: { id: userId }, 
+        select: { hoTen: true } 
+      });
+      await prisma.auditLog.create({
+        data: {
+          userId: userId,
+          userName: user?.hoTen || "Học viên",
+          action: "THÊM CÔNG VIỆC",
+          table: "todo",
+          detail: `Đã thêm công việc mới: ${data.title}`,
+          type: "TODO",
+        }
+      });
+    }
     return NextResponse.json(data);
   } catch (err: any) {
     console.error("LỖI API TODO POST:", err.message);

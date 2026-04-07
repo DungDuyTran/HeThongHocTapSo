@@ -2,7 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
-import { Mail, ShieldCheck, Search, ChevronLeft, ChevronRight, RotateCcw, Filter, Lock, Unlock, Loader2 } from "lucide-react";
+import { 
+  Mail, Search, ChevronLeft, ChevronRight, 
+  RotateCcw, Filter, Lock, Unlock, Loader2, 
+  User, ShieldCheck, UserCog
+} from "lucide-react";
 
 export default function UserManagement() {
   const [users, setUsers] = useState<any[]>([]);
@@ -16,6 +20,7 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
   const fetchUsers = useCallback(async () => {
+    setLoading(true);
     try {
       const res = await axios.get(`/api/admin/users?t=${new Date().getTime()}`);
       setUsers(res.data);
@@ -40,20 +45,14 @@ export default function UserManagement() {
         await axios.post(`/api/admin/users/${id}/toggle-lock`, { 
             isLocked: isCurrentlyLocked 
         });
-
         setUsers((prevUsers) => 
           prevUsers.map((u) => 
-            u.id === id 
-              ? { ...u, sdt: isCurrentlyLocked ? null : "LOCKED" } 
-              : u
+            u.id === id ? { ...u, sdt: isCurrentlyLocked ? null : "LOCKED" } : u
           )
         );
-        
         alert(`Đã ${actionText} thành công!`);
-      
         await fetchUsers();
       } catch (err) {
-        console.error(err);
         alert("Lỗi xử lý yêu cầu!");
       } finally {
         setProcessingId(null); 
@@ -81,141 +80,170 @@ export default function UserManagement() {
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const currentUsers = filteredUsers.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage);
 
-  if (loading) return <div className="p-8 italic text-slate-500 flex items-center gap-2"><Loader2 className="animate-spin"/> Đang tải dữ liệu...</div>;
-
   return (
-    <div className="space-y-6 min-h-[80vh]"> 
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800 italic">Quản lý tài khoản</h1>
-        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-semibold border border-blue-100">
-          Tổng: {filteredUsers.length} người dùng
+    <div className="space-y-8 min-h-screen pb-20 px-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h1 className="text-3xl font-black text-slate-800 italic uppercase tracking-tighter">
+          Quản lý người dùng
+        </h1>
+        <div className="bg-blue-600 text-white px-6 py-2 rounded-xl font-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] uppercase text-xs tracking-widest">
+          Tổng: {filteredUsers.length} tài khoản
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 w-full text-slate-900 shadow-sm rounded-xl">
+      {/* THANH CÔNG CỤ (Giống trang hoạt động) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-white p-5 rounded-[24px] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div className="relative col-span-1 md:col-span-3">
           <Search className="absolute left-3 top-3 text-slate-400" size={18} />
           <input
             type="text"
-            placeholder="Tìm theo tên hoặc email..."
+            placeholder="Tìm theo tên hoặc email học viên..."
             value={searchTerm}
             onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full pl-10 pr-4 py-2.5 border-2 border-black rounded-xl outline-none focus:bg-slate-50 transition-all font-medium"
           />
         </div>
-
-        <div className="relative w-full md:w-48 text-slate-900 shadow-sm rounded-xl">
+        <div className="relative">
           <Filter className="absolute left-3 top-3 text-slate-400" size={18} />
-          <select title="Lọc theo vai trò"
+          <select title="Chọn"
             value={roleFilter}
             onChange={(e) => {setRoleFilter(e.target.value); setCurrentPage(1);}}
-            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer"
+            className="w-full pl-10 pr-4 py-2.5 border-2 border-black rounded-xl bg-white outline-none font-bold appearance-none cursor-pointer"
           >
             <option value="All">Tất cả vai trò</option>
             <option value="HocVien">Học Viên</option>
-            <option value="Admin">Admin</option>
+            <option value="Admin">Quản trị viên</option>
           </select>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden flex flex-col justify-between min-h-[500px]">
-        <table className="w-full text-left">
-          <thead className="bg-slate-50 border-b border-gray-100">
-            <tr>
-              <th className="p-4 font-semibold text-slate-600 text-sm uppercase">Người dùng</th>
-              <th className="p-4 font-semibold text-slate-600 text-sm uppercase">Email</th>
-              <th className="p-4 font-semibold text-slate-600 text-sm uppercase text-center">Trạng thái</th>
-              <th className="p-4 font-semibold text-slate-600 text-sm uppercase text-center">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {currentUsers.map((user: any) => {
-              const isLocked = user.sdt === "LOCKED";
-              return (
-                <tr key={user.id} className={`transition-all duration-300 ${isLocked ? 'bg-red-50/50' : 'hover:bg-slate-50/80'}`}>
-                  <td className="p-4 text-slate-900">
-                    <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold text-white uppercase shadow-sm transition-colors ${isLocked ? 'bg-slate-400' : 'bg-gradient-to-br from-blue-500 to-indigo-600'}`}>
-                        {user.hoTen?.charAt(0) || "U"}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className={`font-semibold transition-all ${isLocked ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{user.hoTen}</span>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{user.vaiTro}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 text-slate-500 text-sm">
-                     <div className="flex items-center gap-2"><Mail size={14} className="opacity-60"/>{user.email}</div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border transition-all ${isLocked ? 'bg-red-100 text-red-600 border-red-200' : 'bg-green-100 text-green-600 border-green-200'}`}>
-                      {isLocked ? 'Bị Khóa' : 'Hoạt Động'}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex justify-center gap-3">
-                      <button onClick={() => setSelectedUser(user)} className="p-2 hover:bg-orange-100 text-orange-500 rounded-lg transition-colors" title="Reset Mật khẩu">
-                        <RotateCcw size={18} />
-                      </button>
-                      
-                      <button 
-                        disabled={processingId === user.id}
-                        onClick={() => handleToggleLock(user.id, user.email, user.sdt)} 
-                        className={`p-2 rounded-lg transition-all ${isLocked ? 'hover:bg-green-100 text-green-600' : 'hover:bg-red-100 text-red-500'}`} 
-                        title={isLocked ? "Mở khóa tài khoản" : "Khóa tài khoản"}
-                      >
-                        {processingId === user.id ? (
-                          <Loader2 size={18} className="animate-spin text-slate-400" />
-                        ) : isLocked ? (
-                          <Unlock size={18} />
-                        ) : (
-                          <Lock size={18} />
-                        )}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-
-        <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-slate-50/30">
-          <p className="text-sm text-slate-500 italic">Hiển thị {currentUsers.length} / {filteredUsers.length} người dùng</p>
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-600">Trang {currentPage} / {totalPages || 1}</span>
-            <div className="flex gap-1">
-              <button title="Trang trước" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-2 rounded-lg border bg-white disabled:opacity-30 hover:bg-slate-50 transition-colors"><ChevronLeft size={18}/></button>
-              <button title="Trang sau" disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-2 rounded-lg border bg-white disabled:opacity-30 hover:bg-slate-50 transition-colors"><ChevronRight size={18}/></button>
-            </div>
+      {/* DANH SÁCH TÀI KHOẢN (Style Card rực rỡ) */}
+      <div className="bg-white rounded-[32px] border-2 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 min-h-[500px]">
+        {loading ? (
+          <div className="flex flex-col items-center py-24">
+            <Loader2 className="animate-spin mb-4 text-blue-600" size={48} />
+            <p className="font-black uppercase text-xs tracking-widest text-slate-400">Đang đồng bộ dữ liệu người dùng...</p>
           </div>
-        </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="text-center py-24 font-bold text-slate-400 italic">Không tìm thấy tài khoản nào khớp yêu cầu.</div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {currentUsers.map((user: any) => {
+                const isLocked = user.sdt === "LOCKED";
+                return (
+                  <div key={user.id} className={`group relative bg-white p-5 rounded-2xl border-2 transition-all duration-200 ${isLocked ? 'border-red-200 opacity-75' : 'border-slate-100 hover:border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'}`}>
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center gap-4">
+                        <div className={`h-14 w-14 rounded-xl border-2 border-black flex items-center justify-center font-black text-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${isLocked ? 'bg-slate-200' : 'bg-yellow-400 text-black'}`}>
+                          {user.hoTen?.charAt(0) || "U"}
+                        </div>
+                        <div>
+                          <h3 className={`font-black text-lg tracking-tight ${isLocked ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+                            {user.hoTen}
+                          </h3>
+                          <div className="flex items-center gap-2 text-slate-500 font-medium text-xs">
+                            <Mail size={12} /> {user.email}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-md border-2 ${user.vaiTro === 'Admin' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
+                        {user.vaiTro}
+                      </span>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t-2 border-dotted border-slate-100 flex items-center justify-between">
+                      <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase border-2 ${isLocked ? 'bg-red-500 text-white border-black' : 'bg-green-400 text-black border-black'}`}>
+                        {isLocked ? 'Đã bị khóa' : 'Hoạt động'}
+                      </span>
+                      
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => setSelectedUser(user)} 
+                          className="p-2 bg-white border-2 border-black rounded-xl hover:bg-orange-400 transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none"
+                          title="Cấp lại mật khẩu"
+                        >
+                          <RotateCcw size={18} />
+                        </button>
+                        
+                        <button 
+                          disabled={processingId === user.id}
+                          onClick={() => handleToggleLock(user.id, user.email, user.sdt)} 
+                          className={`p-2 border-2 border-black rounded-xl transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none ${isLocked ? 'bg-green-400' : 'bg-red-500 text-white'}`}
+                          title={isLocked ? "Mở khóa" : "Khóa tài khoản"}
+                        >
+                          {processingId === user.id ? (
+                            <Loader2 size={18} className="animate-spin" />
+                          ) : isLocked ? (
+                            <Unlock size={18} />
+                          ) : (
+                            <Lock size={18} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* PHÂN TRANG (Giống hệt trang hoạt động) */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-6 pt-10 border-t-2 border-slate-100 mt-6">
+                <button title="Trang trước"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  className="p-2 border-2 border-black rounded-xl hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+
+                <div className="flex items-center gap-2">
+                   <span className="font-black text-sm uppercase italic">Trang</span>
+                   <span className="bg-black text-white px-3 py-1 rounded-lg font-black text-sm">{currentPage}</span>
+                   <span className="font-black text-sm">/ {totalPages}</span>
+                </div>
+
+                <button title="Trang sau"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  className="p-2 border-2 border-black rounded-xl hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/*reset mk */}
+      {/* MODAL RESET PASS (Style mới) */}
       {selectedUser && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl border border-slate-100">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[100] p-4">
+          <div className="bg-white border-[4px] border-black rounded-[40px] p-10 w-full max-w-sm shadow-[20px_20px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden">
             <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-4">
-                <RotateCcw size={32} />
+              <div className="w-20 h-20 bg-orange-400 border-[3px] border-black rounded-full flex items-center justify-center mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <RotateCcw size={40} className="text-black" />
               </div>
-              <h3 className="text-xl font-bold text-slate-800">Cấp lại mật khẩu</h3>
-              <p className="text-slate-500 mt-2">Xác nhận reset mật khẩu cho tài khoản:</p>
-              <p className="font-bold text-blue-600 mt-1">{selectedUser.email}</p>
+              <h3 className="text-2xl font-black text-slate-800 uppercase italic">Cấp lại mật khẩu</h3>
+              <p className="text-slate-500 mt-4 font-medium px-4">
+                Xác nhận reset mật khẩu cho tài khoản:
+              </p>
+              <p className="font-black text-blue-600 mt-2 text-lg break-all">{selectedUser.email}</p>
               
-              <div className="w-full mt-8 space-y-3">
+              <div className="w-full mt-10 space-y-4">
                 <button 
                   onClick={() => handleResetPassword(selectedUser.id)}
-                  className="w-full py-3 rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600 transition-all shadow-md active:scale-95"
+                  className="w-full py-4 rounded-2xl bg-black text-white font-black hover:bg-slate-800 transition-all shadow-[4px_4px_0px_0px_rgba(255,165,0,1)] active:translate-y-1 active:shadow-none uppercase tracking-tighter"
                 >
                   Xác nhận & Gửi Email
                 </button>
                 <button 
                   onClick={() => setSelectedUser(null)}
-                  className="w-full py-3 rounded-xl bg-slate-100 text-slate-600 font-semibold hover:bg-slate-200 transition-all"
+                  className="w-full py-4 rounded-2xl bg-white border-2 border-black text-slate-600 font-black hover:bg-slate-50 transition-all uppercase text-xs"
                 >
-                  Hủy bỏ
+                  Hủy bỏ ngay
                 </button>
               </div>
             </div>

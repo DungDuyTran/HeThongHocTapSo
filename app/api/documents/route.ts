@@ -19,8 +19,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Lấy thông tin từ Header 
     const userIdStr = req.headers.get("x-user-id");
-    const userName = req.headers.get("x-user-name") || "Học viên"; // Lấy thêm tên từ header nếu có
+    let userName = req.headers.get("x-user-name") || "Học viên";
 
     if (!userIdStr)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,17 +29,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const userId = parseInt(userIdStr);
 
-    // Lưu tài liệu vào database
+    const { userName: nameInBody, ...docData } = body;
+
+    // Nếu header không có tên mà body có (từ useAxios), thì lấy từ body
+    if (userName === "Học viên" && nameInBody) {
+      userName = nameInBody;
+    }
+
     const newDoc = await service.createDoc({
-      ...body,
+      ...docData, // Dùng docData đã lọc, không còn userName thừa
       userId: userId,
     });
 
-    
+    // Ghi Audit Log 
     await prisma.auditLog.create({
       data: {
         userId: userId,
-        userName: userName,
+        userName: userName, 
         action: "TẢI TÀI LIỆU",
         table: "document",
         detail: `Đã tải lên tài liệu mới: ${newDoc.title}`,

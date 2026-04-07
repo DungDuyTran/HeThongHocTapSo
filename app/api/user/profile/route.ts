@@ -56,7 +56,17 @@ export async function PUT(req: Request) {
         ngaySinh: data.ngaySinh ? new Date(data.ngaySinh) : null,
       },
     });
-
+    await prisma.auditLog.create({
+      data: {
+        userId: updatedUser.id,
+        userName: updatedUser.hoTen,
+        action: "CẬP NHẬT HỒ SƠ",
+        table: "user",
+        detail: `Người dùng đã cập nhật thông tin cá nhân (${updatedUser.email})`,
+        type: "INFO" 
+      }
+    });
+    
     return NextResponse.json(updatedUser);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
