@@ -127,6 +127,7 @@ model Document {
   fileUrl   String   @db.Text
   fileType  String
   fileSize  String
+  content   String?  @db.LongText
   userId    Int
   createdAt DateTime @default(now())
   hocvien   Hocvien  @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_document_hocvien")

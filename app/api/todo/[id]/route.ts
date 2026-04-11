@@ -36,7 +36,7 @@ export async function PATCH(
           action: "CẬP NHẬT TODO",
           table: "todo",
           detail: detailMsg,
-          type: "TODO",
+          type: "UPDATE",
         },
       });
     }

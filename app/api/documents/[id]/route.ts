@@ -44,7 +44,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
         userId: userId ? Number(userId) : null,
         userName: userRecord?.hoTen || "Học viên", 
         action: "XÓA TÀI LIỆU",
-        table: "document",
+        table: "DOCUMENT",
         detail: `Đã xóa tài liệu: ${doc.title}`,
         type: "DANGER"
       }

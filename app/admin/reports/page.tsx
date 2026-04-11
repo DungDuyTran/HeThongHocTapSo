@@ -63,7 +63,7 @@ export default function AdminReports() {
     XLSX.writeFile(workbook, `Bao_cao_${fileName}_${new Date().toLocaleDateString()}.xlsx`);
   };
 
-  // 1. Lấy danh sách hiện tại dựa trên viewDetail
+  // Lấy danh sách hiện tại dựa trên viewDetail
   const getActiveList = () => {
     if (!reportData) return [];
     if (viewDetail === 'users') return reportData.details.users;
@@ -243,7 +243,7 @@ export default function AdminReports() {
       ) : (
         <div className="flex flex-col items-center py-40">
           <Loader2 className="animate-spin text-blue-600 mb-4" size={48} />
-          <p className="font-black text-slate-400 uppercase tracking-widest">Đang tải dữ liệu báo cáo...</p>
+          <p className="font-black text-slate-400 uppercase tracking-widest">Đang đồng bộ dữ liệu...</p>
         </div>
       )}
     </div>

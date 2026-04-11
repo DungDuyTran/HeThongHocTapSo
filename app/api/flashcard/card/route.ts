@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         action: "THÊM THẺ HỌC",
         table: "flashcard",
         detail: `Đã thêm thẻ mới: ${card.front}`, // Giả sử trường là term (thuật ngữ)
-        type: "FLASHCARD",
+        type: "CREATE",
       }
     });
   }
@@ -45,7 +45,7 @@ export async function PATCH(req: Request) {
         action: "CẬP NHẬT THẺ",
         table: "flashcard",
         detail: `Đã chỉnh sửa thẻ: ${card.front}`,
-        type: "FLASHCARD",
+        type: "UPDATE",
       }
     });
   }

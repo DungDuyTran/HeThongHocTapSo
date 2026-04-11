@@ -60,35 +60,51 @@ export class NoteController extends BaseController<Note> {
     try {
       const userId = parseInt(req.headers.get("x-user-id") || "0");
       const data = await req.json();
-      const { id, title, category } = data;
+      const urlId = req.nextUrl.pathname.split('/').pop();
+      const id = data.id || urlId;
+
+      if (!id || isNaN(parseInt(id))) {
+        return NextResponse.json({ error: "ID không hợp lệ" }, { status: 400 });
+      }
+      const noteId = parseInt(id);
 
       // 1. Thực hiện Update
       const oldNote = await prisma.note.findUnique({ where: { id: parseInt(id) } });
       if (!oldNote) return NextResponse.json({ error: "Không tìm thấy ghi chú" }, { status: 404 });
-      const result = await this.noteService.update(id, data);
+      const result = await this.noteService.update(noteId, data);
 
       // 2. Ghi Log Cập nhật
       if (result) {
         const name = await this.getUserName(userId);
-        let changes = [];
-        if (title && title !== oldNote.title) changes.push(`tên (${oldNote.title} ➔ ${title})`);
-        if (category && category !== oldNote.category) changes.push(`thể loại (${oldNote.category} ➔ ${category})`);
+        let actionLabel = "CẬP NHẬT GHI CHÚ";
+        let detailMsg = `Đã cập nhật nội dung ghi chú: ${result.title}`;
+        
+        // Kiểm tra logic ghim
+        if (oldNote.isPinned === false && result.isPinned === true) {
+          actionLabel = "GHIM GHI CHÚ ";
+        } else if (oldNote.isPinned === true && result.isPinned === false) {
+          actionLabel = "BỎ GHIM GHI CHÚ ";
+        } else {
+          let changes = [];
+          if (data.title && data.title !== oldNote.title) changes.push(`tên (${oldNote.title} ➔ ${data.title})`);
+          if (data.category && data.category !== oldNote.category) changes.push(`thể loại (${oldNote.category} ➔ ${data.category})`);
+          if (changes.length > 0) detailMsg = `Đã chỉnh sửa ${changes.join(", ")}`;
+        }
       
-        const detailMsg = changes.length > 0 
-        ? `Đã chỉnh sửa ${changes.join(", ")}` 
-        : `Đã cập nhật nội dung ghi chú: ${result.title}`;
-        await prisma.auditLog.create({  
+        await prisma.auditLog.create({
           data: {
             userId: userId,
             userName: name,
-            action: "CẬP NHẬT GHI CHÚ",
+            action: actionLabel,
             table: "note",
             detail: detailMsg,
             type: "UPDATE",
           }
         });
-      }return NextResponse.json(result);
+      }
+      return NextResponse.json(result);
     } catch (error: any) {
+      console.error("LỖI CONTROLLER:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
   };

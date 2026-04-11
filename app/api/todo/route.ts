@@ -40,7 +40,7 @@ export async function POST(req: Request) {
           action: "THÊM CÔNG VIỆC",
           table: "todo",
           detail: `Đã thêm công việc mới: ${data.title}`,
-          type: "TODO",
+          type: "CREATE",
         }
       });
     }

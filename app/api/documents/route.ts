@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
         userId: userId,
         userName: userName, 
         action: "TẢI TÀI LIỆU",
-        table: "document",
+        table: "DOCUMENT",
         detail: `Đã tải lên tài liệu mới: ${newDoc.title}`,
         type: "SUCCESS", 
       },

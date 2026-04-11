@@ -122,7 +122,7 @@ export default function UserManagement() {
         {loading ? (
           <div className="flex flex-col items-center py-24">
             <Loader2 className="animate-spin mb-4 text-blue-600" size={48} />
-            <p className="font-black uppercase text-xs tracking-widest text-slate-400">Đang đồng bộ dữ liệu người dùng...</p>
+            <p className="font-black uppercase text-xs tracking-widest text-slate-400">Đang đồng bộ dữ liệu ...</p>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="text-center py-24 font-bold text-slate-400 italic">Không tìm thấy tài khoản nào khớp yêu cầu.</div>
