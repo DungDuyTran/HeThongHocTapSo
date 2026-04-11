@@ -62,11 +62,11 @@ export default function Header({ isCollapsed, setIsCollapsed }: HeaderProps) {
           </div>
 
           <div className="relative">
-            {/* <img
+            <img
               src={avatarUrl}
               alt="Avatar"
               className="w-10 h-10 object-cover bg-green-50 border-2 border-black rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[0.5px] group-hover:translate-y-[0.5px] group-hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
-            /> */}
+            />
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full animate-pulse"></div>
           </div>
         </Link>

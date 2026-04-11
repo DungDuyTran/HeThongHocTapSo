@@ -45,8 +45,8 @@ export default function LandingPage() {
 
         <div className="relative z-10 max-w-6xl text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-green-700 mb-6">
-            Hệ thống thông minh hỗ trợ quản lý và tối ưu hóa lộ trình học tập cá
-            nhân
+            Nền tảng học tập thông minh tích hợp trợ lý ảo AI và cá nhân hóa lộ
+            trình học tập
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-700">

@@ -8,7 +8,7 @@ import ChatWrapper from "@/components/ChatWrapper";
 export const metadata: Metadata = {
   title: "Trợ lý học tập - Smart Study AI",
   description:
-    "Hệ thống thông minh hỗ trợ quản lý và tối ưu hóa lộ trình học tập cá nhân",
+    "THIẾT KẾ VÀ PHÁT TRIỂN NỀN TẢNG HỌC TẬP THÔNG MINH TÍCH HỢP TRỢ LÝ ẢO AI VÀ CÁ NHÂN HOÁ LỘ TRÌNH HỌC TẬP",
   icons: {
     icon: "/favicon.ico",
   },
