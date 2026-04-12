@@ -7,8 +7,8 @@ export default function StatGrid({ stats }: { stats: any }) {
     <div className="lg:w-[38%] flex flex-col justify-between gap-3">
       <StatCard
         icon={<Calendar size={20} />}
-        title="Lịch học"
-        desc={`Hôm nay: ${stats.todayEvents || 0} buổi`}
+        title="Thời gian biểu"
+        desc={`Hôm nay: ${stats.todayEvents || 0} lịch`}
       />
       <StatCard
         icon={<CheckSquare size={20} />}

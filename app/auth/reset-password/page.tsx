@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const token = searchParams.get("token"); // Lấy token từ URL (?token=...)
+  const token = searchParams.get("token");
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -33,9 +33,10 @@ export default function ResetPasswordPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Có lỗi xảy ra");
 
-      setMessage("Đổi mật khẩu thành công! Đang chuyển hướng về trang đăng nhập...");
-      
-      // Chuyển hướng sau 2 giây để user kịp đọc thông báo
+      setMessage(
+        "Đổi mật khẩu thành công! Đang chuyển hướng về trang đăng nhập...",
+      );
+
       setTimeout(() => {
         router.push("/auth/login");
       }, 2000);
@@ -53,7 +54,9 @@ export default function ResetPasswordPage() {
         <div className="text-white text-center">
           <h2 className="text-2xl font-bold">Liên kết không hợp lệ!</h2>
           <p className="mt-4">Vui lòng kiểm tra lại email của bạn.</p>
-          <a href="/auth/login" className="mt-4 block underline">Quay lại trang chủ</a>
+          <a href="/auth/login" className="mt-4 block underline">
+            Quay lại trang chủ
+          </a>
         </div>
       </div>
     );
@@ -115,5 +118,19 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-screen bg-[rgb(18,71,105)] text-white font-bold">
+          Đang tải yêu cầu xác thực...
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
