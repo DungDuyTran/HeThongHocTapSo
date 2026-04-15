@@ -30,6 +30,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const userId = parseInt(userIdStr);
 
+    const userExists = await prisma.user.findUnique({ where: { id: userId } });
+    if (!userExists) {
+      console.error("LỖI: User ID này không tồn tại trong DB!");
+      return NextResponse.json({ error: "Người dùng không tồn tại trong hệ thống mới" }, { status: 400 });
+    }
+
     const { userName: nameInBody, ...docData } = body;
 
     // Nếu header không có tên mà body có (từ useAxios), thì lấy từ body
@@ -44,6 +50,7 @@ export async function POST(req: NextRequest) {
 
     // Ghi Audit Log 
     if (newDoc) {
+      console.log("Lưu DB thành công file:", newDoc.title);
       await prisma.auditLog.create({
         data: {
           userId: userId,

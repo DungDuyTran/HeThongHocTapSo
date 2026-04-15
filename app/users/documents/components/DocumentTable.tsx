@@ -5,7 +5,6 @@ import {
   Trash2,
   Eye,
   Download,
-  Loader2,
   FileJson,
   Presentation,
   FileCode,
@@ -14,7 +13,7 @@ import {
 
 export function DocumentTable({
   loading,
-  documents,
+  documents = [], 
   onDelete,
   onPreview,
 }: any) {
@@ -86,6 +85,15 @@ export function DocumentTable({
                 ĐANG ĐỒNG BỘ...
               </td>
             </tr>
+          ) : documents.length === 0 ? ( 
+            <tr>
+              <td
+                colSpan={4}
+                className="p-20 text-center text-slate-400 font-bold italic text-base"
+              >
+                KHO TÀI LIỆU ĐANG TRỐNG... 
+              </td>
+            </tr>
           ) : (
             documents.map((doc: any) => {
               const style = getFileStyle(doc.fileType);
@@ -101,7 +109,7 @@ export function DocumentTable({
                       {style.icon}
                     </div>
 
-                    <span className="font-bold text-slate-800 text-base tracking-tight leading-tight uppercase italic font-serif">
+                    <span className="font-bold text-slate-800 text-base tracking-tight leading-tight uppercase italic font-serif truncate max-w-[300px]">
                       {doc.title}
                     </span>
                   </td>
@@ -109,16 +117,16 @@ export function DocumentTable({
                     <span
                       className={`text-[9px] font-black px-2 py-1 rounded-md border uppercase ${style.color} border-current`}
                     >
-                      {doc.fileType}
+                      {doc.fileType || "N/A"}
                     </span>
                   </td>
                   <td className="p-4 text-center text-[11px] font-bold text-slate-400 uppercase italic">
-                    {doc.fileSize}
+                    {doc.fileSize || "0 KB"}
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex justify-end gap-2">
-                      {/* QUAN TRỌNG: Nút xem trước đã được fix */}
-                      <button
+                      <button 
+                        title="Xem trước"
                         onClick={() => onPreview(doc.fileUrl, doc.fileType)}
                         className="p-2.5 text-green-600 hover:bg-green-50 rounded-xl transition-all"
                       >
@@ -127,11 +135,13 @@ export function DocumentTable({
                       <a
                         href={doc.fileUrl}
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
                       >
                         <Download size={20} />
                       </a>
-                      <button
+                      <button 
+                        title="Xóa tài liệu"
                         onClick={() => onDelete(doc.id)}
                         className="p-2.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-xl transition-all"
                       >

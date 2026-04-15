@@ -1,15 +1,21 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useAxios } from "@/lib/hooks/useAxios";
-import { notifier } from "@/lib/notifier"; // Thêm notifier
+import { notifier } from "@/lib/notifier"; 
 
 export function useDocument() {
   const [documents, setDocuments] = useState<any[]>([]);
   const { fetchData, loading } = useAxios();
 
   const loadDocs = useCallback(async () => {
-    const res = await fetchData("GET", "/api/documents");
-    if (res) setDocuments(res as any[]);
+    const res: any = await fetchData("GET", "/api/documents");
+    if (res) {
+      if (res.data && Array.isArray(res.data)) {
+        setDocuments(res.data);
+      } else if (Array.isArray(res)) {
+        setDocuments(res); // Nếu Backend trả về mảng thuần
+      }
+    }
   }, [fetchData]);
 
   const addDoc = async (docData: any) => {
@@ -31,7 +37,6 @@ export function useDocument() {
     try {
       await fetchData("DELETE", `/api/documents/${id}`);
       await loadDocs();
-      // Hàm warn truyền 1 tham số như Dũng nhắc nhở
       notifier.warn("Tài liệu đã bị xóa khỏi hệ thống! ");
     } catch (error) {
       notifier.error("Lỗi!", "Không thể xóa tài liệu.");
@@ -42,5 +47,11 @@ export function useDocument() {
     loadDocs();
   }, [loadDocs]);
 
-  return { documents, addDoc, removeDoc, loading };
+  return { 
+    documents, 
+    addDoc, 
+    removeDoc, 
+    loading, 
+    mutate: loadDocs 
+  };
 }

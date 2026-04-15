@@ -65,7 +65,9 @@ export default function NotificationPage() {
           </div>
         ) : (
           <>
-            {notifications.map((n: any) => (
+            {notifications.map((n: any) => {
+              const { color, icon } = getTagProps(n.type);
+              return (
               <div 
                 key={n.id}
                 className={`group relative border-[3px] border-black p-6 rounded-[24px] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none ${
@@ -96,7 +98,8 @@ export default function NotificationPage() {
                   )}
                 </div>
               </div>
-            ))}
+              );
+            })}
 
             {/* Điều khiển phân trang */}
             {totalPages > 1 && (

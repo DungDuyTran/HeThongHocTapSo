@@ -7,16 +7,30 @@ export class DocumentRepository extends BaseRepository<Document> {
     super(prisma.document as unknown as PrismaDelegate<Document>);
   }
 
-  async findByUserId(userId: number): Promise<Document[]> {
-    // Ép kiểu 'as any' để TypeScript cho phép dùng orderBy mà không lỗi
-    return (this.model as any).findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-    });
-  }
+async findByUserId(userId: number): Promise<Document[]> {
+  return (this.model as any).findMany({
+    where: { 
+      userId: Number(userId) 
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
+async create(data: any): Promise<Document> {
+  console.log(">>> [Repo] Dữ liệu nhận vào:", data);
+
+  return this.model.create({
+    data: {
+      title: data.title,
+      fileUrl: data.fileUrl,
+      fileType: data.fileType,
+      fileSize: data.fileSize,
+      userId: Number(data.userId) 
+    }
+  });
+}
   async delete(id: number) {
-    return (this.model as any).deleteMany({
-      where: { id },
+    return (this.model as any).delete({
+      where: { id: Number(id) },
     });
   }
 }

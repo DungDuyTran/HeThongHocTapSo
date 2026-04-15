@@ -19,6 +19,8 @@ export function UploadModal({ isOpen, onClose, onAdd }: Props) {
     type: string;
   } | null>(null);
 
+  const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+  const user = userStr ? JSON.parse(userStr) : null;
   if (!isOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {

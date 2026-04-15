@@ -7,10 +7,19 @@ export async function GET(req: Request) {
   const endDate = searchParams.get("end");
 
   try {
-    const dateFilter = startDate && endDate ? {
-      gte: new Date(startDate),
-      lte: new Date(endDate),
-    } : undefined;
+    let dateFilter = undefined;
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      dateFilter = {
+        gte: start,
+        lte: end,
+      };
+    }
 
     const [users, docs, folders] = await Promise.all([
       prisma.user.findMany({
