@@ -19,7 +19,8 @@ export function UploadModal({ isOpen, onClose, onAdd }: Props) {
     type: string;
   } | null>(null);
 
-  const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+  const userStr =
+    typeof window !== "undefined" ? localStorage.getItem("user") : null;
   const user = userStr ? JSON.parse(userStr) : null;
   if (!isOpen) return null;
 
@@ -35,12 +36,12 @@ export function UploadModal({ isOpen, onClose, onAdd }: Props) {
     }
 
     onAdd({
-    title: title,
-    fileUrl: fileInfo.url,
-    fileType: fileInfo.type,
-    fileSize: fileInfo.size,
-    userName: user?.hoTen 
-  });
+      title: title,
+      fileUrl: fileInfo.url,
+      fileType: fileInfo.type,
+      fileSize: fileInfo.size,
+      userName: user?.hoTen,
+    });
 
     setTitle("");
     setFileInfo(null);
@@ -74,7 +75,7 @@ export function UploadModal({ isOpen, onClose, onAdd }: Props) {
             </label>
             <input
               required
-              readOnly 
+              readOnly
               className="w-full p-4 border-[3px] border-black rounded-2xl outline-none bg-slate-100 text-slate-500 font-bold italic cursor-not-allowed"
               placeholder="Tên file..."
               value={title}
@@ -89,6 +90,9 @@ export function UploadModal({ isOpen, onClose, onAdd }: Props) {
             <div className="border-[3px] border-dashed border-black p-8 rounded-2xl bg-slate-50 flex flex-col items-center justify-center gap-4 hover:bg-slate-100 transition-colors">
               <UploadButton<OurFileRouter, "documentUploader">
                 endpoint="documentUploader"
+                headers={{
+                  "x-user-id": user?.id?.toString() || "1",
+                }}
                 onClientUploadComplete={(res) => {
                   if (res && res[0]) {
                     setTitle(res[0].name);
@@ -105,8 +109,8 @@ export function UploadModal({ isOpen, onClose, onAdd }: Props) {
                   }
                 }}
                 onUploadProgress={(p) => {
-                console.log("Tiến độ: ", p);
-                 }}
+                  console.log("Tiến độ: ", p);
+                }}
                 onUploadError={(error: Error) => {
                   notifier.error("Lỗi tải lên!", error.message);
                 }}

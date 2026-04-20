@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
         });
         console.log("ĐÃ GHI AUDIT LOG TẢI FILE!");
       } catch (e) {
-        console.error("❌ Lỗi ghi log nhưng vẫn cho upload tiếp:", e);
+        console.error("Lỗi ghi log nhưng vẫn cho upload tiếp:", e);
       }
     }
 

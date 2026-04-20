@@ -10,17 +10,20 @@ export async function POST(req: Request) {
     console.log("--- CHECK DATA ---");
     console.log("User ID:", userId);
     console.log("API Key tồn tại không:", !!process.env.GEMINI_API_KEY);
-    const apiKey = process.env.GEMINI_API_KEY; 
-    
+    const apiKey = process.env.GEMINI_API_KEY;
+
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     // Lấy lịch sử chat
     const oldMessages = await prisma.chatHistory.findMany({
       where: { userId: Number(userId) },
-      orderBy: { createdAt: 'asc' },
-      take: 5 
+      orderBy: { createdAt: "asc" },
+      take: 5,
     });
-    let systemInstruction = `Bạn là "Smart Study AI". Phong cách: Thân thiện, xưng "Tui", gọi "Bạn".`;
+    let systemInstruction = `Bạn là "Smart Study AI". Phong cách: Thân thiện, xưng "Tui", gọi "Bạn".
+    QUY ĐỊNH QUAN TRỌNG: 
+    - KHÔNG ĐƯỢC sử dụng các ký hiệu Markdown như dấu sao (**) hoặc (__) để in đậm văn bản. 
+    - Trả lời bằng văn bản thuần túy (Plain text), không định dạng đậm nhạt.`;
     if (isAdmin) {
       systemInstruction += `
       BẠN ĐANG TRÒ CHUYỆN VỚI QUẢN TRỊ VIÊN.
@@ -49,78 +52,164 @@ export async function POST(req: Request) {
       - Cập nhật họ tên: Biểu tượng người dùng -> Họ tên -> Nhập tên mới -> Lưu.
       - Cập nhật email: Biểu tượng người dùng -> Email -> Nhập email mới -> Lưu.
       - Cập nhật ngày sinh: Biểu tượng người dùng -> Ngày sinh -> Nhập ngày mới -> Lưu.      
-      `;
+      
+      HƯỚNG DẪN TẠO FLASHCARD TỰ ĐỘNG:
+      - Khi người dùng muốn tạo bộ thẻ Flashcard từ tài liệu, hãy phân tích nội dung và trả về JSON theo mẫu chính xác sau:
+      FLASHCARDS_DATA: {
+      "name": "Tên bộ thẻ (Ví dụ: Từ vựng Tiếng Anh chuyên ngành)",
+      "cards": [
+      {"front": "Mặt trước (Khái niệm)", "back": "Mặt sau (Định nghĩa)"},
+      {"front": "Mặt trước 2", "back": "Mặt sau 2"}
+        ]
+      }`;
     }
 
     const chatContent = [
-      ...oldMessages.map(m => ({
+      ...oldMessages.map((m) => ({
         role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.message }]
+        parts: [{ text: m.message }],
       })),
-      { role: "user", parts: [{ text: `${systemInstruction}\n\nCâu hỏi của người dùng: ${message}` }] }
+      {
+        role: "user",
+        parts: [
+          {
+            text: `${systemInstruction}\n\nCâu hỏi của người dùng: ${message}`,
+          },
+        ],
+      },
     ];
 
     // Gọi AI lần 1
     const res1 = await axios.post(apiUrl, { contents: chatContent });
-    
+
     // Kiểm tra an toàn dữ liệu trả về
     if (!res1.data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        throw new Error("AI không trả về nội dung");
+      throw new Error("AI không trả về nội dung");
     }
-    
+
     let aiResponse = res1.data.candidates[0].content.parts[0].text;
 
-    // Xử lý SQL 
+    // Xử lý SQL
     if (aiResponse.includes("QUERY:")) {
       try {
-        let sql = aiResponse.split("QUERY:")[1].trim()
-                   .replace(/```sql|```/g, "")
-                   .replace(/;/g, "");
+        let sql = aiResponse
+          .split("QUERY:")[1]
+          .trim()
+          .replace(/```sql|```/g, "")
+          .replace(/;/g, "");
 
         if (!isAdmin && sql.toUpperCase().includes("FROM USER")) {
-        return NextResponse.json({ reply: "Tui chỉ có quyền lục tài liệu học tập của Bạn thôi nè!" });
-      }
-        
+          return NextResponse.json({
+            reply: "Tui chỉ có quyền lục tài liệu học tập của Bạn thôi nè!",
+          });
+        }
+
         console.log("AI ĐANG TRUY VẤN SQL:", sql);
-        const dbData = await prisma.$queryRawUnsafe(sql) as any[];
+        const dbData = (await prisma.$queryRawUnsafe(sql)) as any[];
 
         let contextForAI = "";
         if (!dbData || dbData.length === 0) {
-            contextForAI = "Tui đã tìm trong kho nhưng không thấy tài liệu nào liên quan đến câu hỏi của Bạn.";
+          contextForAI =
+            "Tui đã tìm trong kho nhưng không thấy tài liệu nào liên quan đến câu hỏi của Bạn.";
         } else {
-            const title = dbData[0].title || "Không tên";
-            const content = dbData[0].content || "";
-            // Cắt nội dung còn 8000 ký tự để tránh lỗi "Payload Too Large" (413)
-            contextForAI = `NỘI DUNG TỪ FILE "${title}": ${content.substring(0, 8000)}`;
+          const title = dbData[0].title || "Không tên";
+          const content = dbData[0].content || "";
+          // Cắt nội dung còn 8000 ký tự để tránh lỗi "Payload Too Large" (413)
+          contextForAI = `NỘI DUNG TỪ FILE "${title}": ${content.substring(0, 8000)}`;
         }
-        
+
         const res2 = await axios.post(apiUrl, {
           contents: [
             ...chatContent,
             { role: "model", parts: [{ text: aiResponse }] },
-            { role: "user", parts: [{ text: `${contextForAI}\n\nBạn hãy dựa vào nội dung tui vừa tìm được để trả lời câu hỏi ban đầu của tui thật thân thiện và súc tích nhé.` }] }
-          ]
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `${contextForAI}\n\nBạn hãy dựa vào nội dung tui vừa tìm được để trả lời câu hỏi ban đầu của tui thật thân thiện và súc tích nhé.`,
+                },
+              ],
+            },
+          ],
         });
         aiResponse = res2.data.candidates[0].content.parts[0].text;
       } catch (e: any) {
         console.error("LỖI SQL HOẶC AI LẦN 2:", e.message);
-        aiResponse = "Tui gặp chút rắc rối khi lục lại bộ nhớ tài liệu. Bạn thử hỏi lại kiểu khác xem!";
+        aiResponse =
+          "Tui gặp chút rắc rối khi lục lại bộ nhớ tài liệu. Bạn thử hỏi lại kiểu khác xem!";
+      }
+    }
+    if (aiResponse.includes("FLASHCARDS_DATA:")) {
+      try {
+        const jsonStr = aiResponse.split("FLASHCARDS_DATA:")[1].trim();
+        const flashData = JSON.parse(jsonStr);
+
+        // 1. Tạo Folder mới cho Flashcard
+        const folder = await prisma.flashcardFolder.create({
+          data: {
+            name: flashData.name,
+            userId: Number(userId),
+          },
+        });
+
+        // 2. Insert hàng loạt các card
+        if (folder && flashData.cards.length > 0) {
+          await prisma.flashcard.createMany({
+            data: flashData.cards.map((card: any) => ({
+              front: card.front,
+              back: card.back,
+              folderId: folder.id,
+            })),
+          });
+
+          const user = await prisma.user.findUnique({
+            where: { id: Number(userId) },
+            select: { hoTen: true },
+          });
+
+          await prisma.auditLog.create({
+            data: {
+              userId: Number(userId),
+              userName: user?.hoTen || "Học viên",
+              action: "TẠO BỘ THẺ TỰ ĐỘNG",
+              table: "flashcardfolder",
+              detail: `AI đã tạo bộ thẻ: ${flashData.name} (${flashData.cards.length} thẻ)`,
+              type: "CREATE",
+            },
+          });
+
+          await notificationService.create({
+            userId: Number(userId),
+            title: "AI TẠO BỘ THẺ THÀNH CÔNG",
+            message: `Bộ thẻ "${flashData.name}" đã được AI soạn xong. Vào học thôi bro!`,
+            type: "SUCCESS",
+          });
+
+          aiResponse = `Tui đã soạn xong bộ thẻ "${flashData.name}" với ${flashData.cards.length} thẻ dựa trên tài liệu của Bạn. Bạn kiểm tra trong mục Flashcard nhé!`;
+        }
+      } catch (parseError) {
+        console.error("LỖI XỬ LÝ FLASHCARD:", parseError);
+        aiResponse =
+          "Tui trích xuất dữ liệu Flashcard bị lỗi một chút, bro thử yêu cầu lại nhé!";
       }
     }
     // Lưu lịch sử (CreateMany)
     await prisma.chatHistory.createMany({
       data: [
         { userId: Number(userId), role: "user", message: message },
-        { userId: Number(userId), role: "model", message: aiResponse }
-      ]
-    })
+        { userId: Number(userId), role: "model", message: aiResponse },
+      ],
+    });
     // Kiểm tra tổng số tin nhắn của user này
     const chatCount = await prisma.chatHistory.count({
-      where: { userId: Number(userId) }
+      where: { userId: Number(userId) },
     });
     return NextResponse.json({ reply: aiResponse });
-    } catch (error: any) {
+  } catch (error: any) {
     console.log("LỖI TỔNG:", error.response?.data || error.message);
-    return NextResponse.json({ reply: "Server AI đang bận tí bạn ơi, đợi vài giây thử lại nhé!" }, { status: 500 });
+    return NextResponse.json(
+      { reply: "Server AI đang bận tí bạn ơi, đợi vài giây thử lại nhé!" },
+      { status: 500 },
+    );
   }
 }
