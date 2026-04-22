@@ -8,15 +8,18 @@ export class DocumentRepository extends BaseRepository<Document> {
   }
 
 async findByUserId(userId: number): Promise<Document[]> {
-  return (this.model as any).findMany({
+  console.log("ĐANG TRUY VẤN TÀI LIỆU CHO USER ID:", userId);
+  const result = await (this.model as any).findMany({
     where: { 
       userId: Number(userId) 
     },
     orderBy: { createdAt: "desc" },
   });
+  console.log(`Tìm thấy ${result.length} kết quả.`);
+  return result;
 }
 async create(data: any): Promise<Document> {
-  console.log(">>> [Repo] Dữ liệu nhận vào:", data);
+  console.log("Dữ liệu nhận vào:", data);
 
   const newDoc = await prisma.document.create({
     data: {
