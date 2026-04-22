@@ -12,8 +12,30 @@ export default function SchedulePage() {
     useSchedule();
 
   const handleSave = () => {
+    // 1. Kiểm tra tên công việc
     if (!form.title.trim()) {
       notifier.error("Thiếu thông tin!", "Bạn ơi, nhập tên hoạt động đã nhé.");
+      return;
+    }
+
+    // Lỗi 2: Xóa 1 trong 2 hoặc xóa cả 2 thời điểm
+    if (!form.start || !form.end) {
+      notifier.warn("Bạn chọn ngày bắt đầu/kết thúc đã nhé.");
+      return;
+    }
+
+    const startTime = new Date(form.start).getTime();
+    const endTime = new Date(form.end).getTime();
+
+    // Lỗi 1: Thời điểm bắt đầu và kết thúc trùng nhau
+    if (startTime === endTime) {
+      notifier.warn("Thời điểm bắt đầu và kết thúc trùng nhau!");
+      return;
+    }
+
+    // Tính năng bảo vệ thêm: Thời gian kết thúc không được trước thời gian bắt đầu
+    if (startTime > endTime) {
+      notifier.warn("Thời điểm kết thúc không thể trước thời điểm bắt đầu!");
       return;
     }
 

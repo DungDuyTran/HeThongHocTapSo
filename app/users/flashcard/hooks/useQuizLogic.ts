@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { notifier } from "@/lib/notifier"; // Thêm notifier
+import { notifier } from "@/lib/notifier";
 
 export function useQuizLogic(folderId: string, quizData: any[]) {
   const [index, setIndex] = useState(0);
@@ -9,18 +9,35 @@ export function useQuizLogic(folderId: string, quizData: any[]) {
   const [timer, setTimer] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Mảng lưu chi tiết từng câu để xem lại
   const [userAnswers, setUserAnswers] = useState<any[]>([]);
 
+  // 1. CẢNH BÁO KHI TẮT TAB HOẶC F5
   useEffect(() => {
-    if (!quizData || isFinished || quizData.length === 0) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isFinished && Array.isArray(quizData) && quizData.length >= 4) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isFinished, quizData]);
+
+  // 2. CHẠY BỘ ĐẾM GIỜ
+  useEffect(() => {
+    if (!Array.isArray(quizData) || isFinished || quizData.length < 4) return;
     const interval = setInterval(() => setTimer((t) => t + 1), 1000);
     return () => clearInterval(interval);
   }, [quizData, isFinished]);
 
   const handleAnswer = async (selected: string) => {
-    if (isProcessing || isFinished) return;
+    if (
+      isProcessing ||
+      isFinished ||
+      !Array.isArray(quizData) ||
+      quizData.length < 4
+    )
+      return;
     setIsProcessing(true);
 
     const correctAnswer = quizData[index].back.trim();
@@ -30,7 +47,6 @@ export function useQuizLogic(folderId: string, quizData: any[]) {
 
     setCorrect(newCorrect);
 
-    // LƯU LẠI VẾT CHỌN ĐÁP ÁN
     const answerDetail = {
       front: quizData[index].front,
       options: quizData[index].options,
@@ -38,6 +54,7 @@ export function useQuizLogic(folderId: string, quizData: any[]) {
       userChoice: userAnswer,
       isCorrect: isCorrect,
     };
+
     const newAnswersHistory = [...userAnswers, answerDetail];
     setUserAnswers(newAnswersHistory);
 
@@ -49,7 +66,6 @@ export function useQuizLogic(folderId: string, quizData: any[]) {
     } else {
       setIsFinished(true);
       const finalScore = Math.round((newCorrect / quizData.length) * 100);
-
       try {
         await axios.post("/api/flashcard/history", {
           folderId: parseInt(folderId),
@@ -57,7 +73,7 @@ export function useQuizLogic(folderId: string, quizData: any[]) {
           totalQuestions: quizData.length,
           timeSpent: timer,
           score: finalScore,
-          details: newAnswersHistory, // Đẩy data lên DB
+          details: newAnswersHistory,
         });
         notifier.success("Hoàn thành!", "Đã lưu kết quả bài kiểm tra.");
       } catch (err) {
@@ -74,8 +90,13 @@ export function useQuizLogic(folderId: string, quizData: any[]) {
     timer,
     isFinished,
     handleAnswer,
-    current: quizData?.[index],
-    userAnswers, // Trả về để UI hiển thị
-    progress: quizData?.length > 0 ? ((index + 1) / quizData.length) * 100 : 0,
+    // Tránh lỗi undefined khi mảng trống bằng check Array.isArray
+    current:
+      Array.isArray(quizData) && quizData.length >= 4 ? quizData[index] : null,
+    userAnswers,
+    progress:
+      Array.isArray(quizData) && quizData.length > 0
+        ? ((index + 1) / quizData.length) * 100
+        : 0,
   };
 }
