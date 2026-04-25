@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { notificationService } from "@/lib/notification-service";
 
 const shuffle = (array: any[]) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -52,13 +51,6 @@ export async function GET(req: Request) {
         detail: `Người dùng bắt đầu làm Quiz trong bộ thẻ: ${folder.name}`,
         type: "INFO",
       },
-    });
-
-    await notificationService.create({
-      userId,
-      title: "HỌC TẬP CHĂM CHỈ",
-      message: `Bạn vừa bắt đầu bài kiểm tra "${folder.name}". Chúc Bạn đạt điểm cao nhé!`,
-      type: "INFO",
     });
 
     const quizData = allCards.map((card) => {

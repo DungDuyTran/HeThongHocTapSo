@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { TodoService } from "@/lib/api/service/TodoService";
 import prisma from "@/lib/prisma";
-import { notificationService } from "@/lib/notification-service";
 
 export async function PATCH(
   req: Request,
@@ -25,11 +24,10 @@ export async function PATCH(
 
       let detailMsg = `Đã cập nhật công việc: ${updated.title}`;
       let isCompleting = false;
-      // Check nếu người dùng vừa tích hoàn thành
       if (body.status !== undefined && body.status !== oldTodo.status) {
         detailMsg = body.status
-          ? `Đã hoàn thành công việc: ${updated.title} ✅`
-          : `Đã đánh dấu chưa hoàn thành: ${updated.title} ⏳`;
+          ? `Đã hoàn thành công việc: ${updated.title} `
+          : `Đã đánh dấu chưa hoàn thành: ${updated.title} `;
       }
       await prisma.auditLog.create({
         data: {
@@ -40,12 +38,6 @@ export async function PATCH(
           detail: detailMsg,
           type: "UPDATE",
         },
-      });
-      await notificationService.create({
-        userId,
-        title: isCompleting ? "NHIỆM VỤ HOÀN THÀNH" : "CẬP NHẬT NHIỆM VỤ",
-        message: detailMsg,
-        type: isCompleting ? "SUCCESS" : "INFO",
       });
     }
     return NextResponse.json(updated);
@@ -90,12 +82,6 @@ export async function DELETE(
           detail: `Đã xóa công việc: ${todoToDelete.title}`,
           type: "DELETE",
         },
-      });
-      await notificationService.create({
-        userId,
-        title: "ĐÃ XÓA NHIỆM VỤ",
-        message: `Nhiệm vụ "${todoToDelete.title}" đã được gỡ bỏ khỏi danh sách.`,
-        type: "WARN",
       });
     }
     return NextResponse.json({ message: "Xóa thành công" });

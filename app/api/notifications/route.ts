@@ -13,19 +13,20 @@ export async function GET(req: Request) {
 
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const total = await prisma.notification.count({
-      where: { userId }
-    });
-
-    const notifications = await prisma.notification.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      skip: skip,
-      take: limit,
-    });
+    const [unreadCount, total, notifications] = await Promise.all([
+      prisma.notification.count({ where: { userId, isRead: false } }),
+      prisma.notification.count({ where: { userId } }),
+      prisma.notification.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        skip: skip,
+        take: limit,
+      })
+    ]);
 
     return NextResponse.json({
       data: notifications,
+      unreadCount: unreadCount,
       totalPages: Math.ceil(total / limit),
       total: total
     });

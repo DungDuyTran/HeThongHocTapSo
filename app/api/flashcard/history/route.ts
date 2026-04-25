@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma"; 
-import { notificationService } from "@/lib/notification-service";
 
 export async function GET(req: Request) {
   try {
@@ -81,12 +80,6 @@ export async function POST(req: Request) {
         evalMsg = `Kết quả: ${finalScore}% ở bộ thẻ "${history.folder.name}". Đừng nản, luyện tập thêm vài lần sẽ nhớ ngay!`;
         notifyType = "WARN";
       }
-      await notificationService.create({
-        userId,
-        title: "KẾT QUẢ KIỂM TRA",
-        message: evalMsg,
-        type: notifyType,
-      });
     }
     return NextResponse.json(history);
   } catch (error: any) {

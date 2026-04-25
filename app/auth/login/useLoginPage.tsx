@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAxios } from "@/lib/hooks/useAxios";
 import { User_vaiTro } from "@prisma/client";
+import { notifier } from "@/lib/notifier";
 
 interface LoginResponse {
   message: string;
@@ -38,24 +39,35 @@ export function useLoginPage() {
     try {
       const res = await fetchData("POST", "/api/auth/login", formData);
 
-      if (res && res.user) {
-        //  1. Lưu đúng object user (có id và hoTen) vào máy
+      if (!res) return;
+
+      if (res.user) {
         localStorage.setItem("user", JSON.stringify(res.user));
+        
+        if (typeof notifier !== 'undefined') {
+          notifier.success(res.message || "Đăng nhập thành công");
+        }
 
-        alert(res.message || "Đăng nhập thành công");
-
-        //  2. Điều hướng dựa trên vai trò
         const role = res.user.vaiTro;
         if (role === "Admin") {
           router.push("/admin/dashboard");
         } else {
-          router.push("/users"); // Hoặc /users tùy bro
+          router.push("/users");
         }
       }
     } catch (err: any) {
-      const serverMessage =
-        err.response?.data?.error || "Email hoặc mật khẩu không chính xác";
-      setError(serverMessage);
+      console.log("Lỗi đăng nhập:", err);
+
+      const status = err.response?.status;
+      const serverError = err.response?.data?.error;
+
+      if (status === 403) {
+        setError(serverError || "Tài khoản đã bị khóa bởi Quản trị viên.");
+      } else if (status === 401) {
+        setError("Email hoặc mật khẩu không chính xác.");
+      } else {
+        setError(serverError || "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
+      }
     }
   };
 

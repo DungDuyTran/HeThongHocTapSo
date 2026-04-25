@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { FlashcardService } from "@/lib/api/service/FlashcardService";
-import { notificationService } from "@/lib/notification-service";
+
 
 const service = new FlashcardService();
 export async function GET(req: Request) {
@@ -53,14 +53,7 @@ export async function POST(req: Request) {
           type: "CREATE",
         }
       });
-      await notificationService.create({
-        userId,
-        title: "TẠO BỘ THẺ MỚI",
-        message: `Bộ thẻ "${name}" đã được tạo thành công. Bắt đầu thêm thẻ để học thôi nào! 📚`,
-        type: "SUCCESS",
-      });
     }
-
     return NextResponse.json(newFolder);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -98,13 +91,6 @@ export async function PATCH(req: Request) {
           type: "UPDATE",
         }
       });
-
-      await notificationService.create({
-        userId,
-        title: "CẬP NHẬT THƯ MỤC",
-        message: `Thư mục của Bạn đã được đổi tên thành "${name}" thành công!`,
-        type: "INFO",
-      });
     }
 
     return NextResponse.json(updatedFolder);
@@ -141,12 +127,6 @@ export async function DELETE(req: Request) {
           detail: `Đã xóa bộ thẻ: ${folderToDelete.name}`,
           type: "DELETE", 
         }
-      });
-      await notificationService.create({
-        userId,
-        title: "XÓA BỘ THẺ",
-        message: `Bạn đã xóa bộ thẻ "${folderToDelete.name}" cùng toàn bộ các thẻ bên trong.`,
-        type: "WARN",
       });
     }
     return NextResponse.json({ message: "Xóa thư mục thành công" });

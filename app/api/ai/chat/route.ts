@@ -14,16 +14,12 @@ export async function POST(req: Request) {
 
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-    // Lấy lịch sử chat
-    const oldMessages = await prisma.chatHistory.findMany({
-      where: { userId: Number(userId) },
-      orderBy: { createdAt: "asc" },
-      take: 5,
-    });
     let systemInstruction = `Bạn là "Smart Study AI". Phong cách: Thân thiện, xưng "Tui", gọi "Bạn".
     QUY ĐỊNH QUAN TRỌNG: 
-    - KHÔNG ĐƯỢC sử dụng các ký hiệu Markdown như dấu sao (**) hoặc (__) để in đậm văn bản. 
-    - Trả lời bằng văn bản thuần túy (Plain text), không định dạng đậm nhạt.`;
+    - Chỉ sử dụng văn bản thuần túy (Plain text), KHÔNG dùng Markdown (** hoặc __).
+    - KHÔNG tự ý tóm tắt tài liệu trừ khi người dùng yêu cầu hoặc câu hỏi liên quan trực tiếp đến kiến thức trong tài liệu.
+    - Nếu người dùng hỏi về cách sử dụng hệ thống (đổi thông tin, tải file...), hãy trả lời ngay dựa trên HƯỚNG DẪN HỆ THỐNG bên dưới.`;
+
     if (isAdmin) {
       systemInstruction += `
       BẠN ĐANG TRÒ CHUYỆN VỚI QUẢN TRỊ VIÊN.
@@ -40,18 +36,15 @@ export async function POST(req: Request) {
       `;
     } else {
       systemInstruction += `
-      BẠN ĐANG TRÒ CHUYỆN VỚI HỌC VIÊN.
-      - Bạn KHÔNG ĐƯỢC truy vấn bảng user.
-      - Bạn chỉ được tìm tài liệu của userId = ${userId}.
-      - QUERY: SELECT title, content FROM document WHERE userId = ${userId} AND ...
+      HƯỚNG DẪN HỆ THỐNG (ƯU TIÊN):
+      1. Đổi thông tin cá nhân (Họ tên, Email, SĐT, Ngày sinh): Bạn nhấn vào biểu tượng hình người (Avatar) ở góc trên bên phải màn hình -> Chọn mục tương ứng cần sửa -> Nhập thông tin mới -> Nhấn Lưu.
+      2. Tải tài liệu: Vào menu "Tài liệu" -> Nhấn nút "Tải lên".
+      3. Tạo Flashcard: Vào menu "Flashcard" -> Nhấn "Tạo mới".
 
-      HƯỚNG DẪN HỆ THỐNG:
-      - Tạo Flashcard: Menu Flashcard -> Nút "Tạo mới" -> Nhập mặt trước/sau -> Lưu.
-      - Tải tài liệu: Menu Tài liệu -> Nút "Tải lên" -> Chọn file từ máy -> Điền tên tài liệu -> Lưu.
-      - Cập nhật số điện thoại: Biểu tượng người dùng -> Số điện thoại -> Nhập số mới -> Lưu.
-      - Cập nhật họ tên: Biểu tượng người dùng -> Họ tên -> Nhập tên mới -> Lưu.
-      - Cập nhật email: Biểu tượng người dùng -> Email -> Nhập email mới -> Lưu.
-      - Cập nhật ngày sinh: Biểu tượng người dùng -> Ngày sinh -> Nhập ngày mới -> Lưu.      
+      QUY TẮC TRUY VẤN TÀI LIỆU:
+      - Chỉ khi người dùng hỏi về kiến thức, nội dung chuyên môn, hoặc yêu cầu tóm tắt file, bạn mới được dùng lệnh QUERY.
+      - QUERY: SELECT title, content FROM document WHERE userId = ${userId} AND (title LIKE '%từ_khóa%' OR content LIKE '%từ_khóa%') LIMIT 1
+      - Nếu người dùng chỉ chào hỏi hoặc hỏi cách dùng web, TUYỆT ĐỐI KHÔNG dùng QUERY.      
       
       HƯỚNG DẪN TẠO FLASHCARD TỰ ĐỘNG:
       - Khi người dùng muốn tạo bộ thẻ Flashcard từ tài liệu, hãy phân tích nội dung và trả về JSON theo mẫu chính xác sau:
@@ -63,6 +56,13 @@ export async function POST(req: Request) {
         ]
       }`;
     }
+
+    const oldMessages = await prisma.chatHistory.findMany({
+      where: { userId: Number(userId) },
+      orderBy: { createdAt: "desc" }, // Lấy mới nhất trước
+      take: 10,
+    });
+    const history = oldMessages.reverse();
 
     const chatContent = [
       ...oldMessages.map((m) => ({
@@ -177,14 +177,6 @@ export async function POST(req: Request) {
               type: "CREATE",
             },
           });
-
-          await notificationService.create({
-            userId: Number(userId),
-            title: "AI TẠO BỘ THẺ THÀNH CÔNG",
-            message: `Bộ thẻ "${flashData.name}" đã được AI soạn xong. Vào học thôi bro!`,
-            type: "SUCCESS",
-          });
-
           aiResponse = `Tui đã soạn xong bộ thẻ "${flashData.name}" với ${flashData.cards.length} thẻ dựa trên tài liệu của Bạn. Bạn kiểm tra trong mục Flashcard nhé!`;
         }
       } catch (parseError) {

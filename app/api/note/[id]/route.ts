@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { noteController } from "@/lib/api/controller/NoteController";
 import prisma from "@/lib/prisma";
-import { notificationService } from "@/lib/notification-service";
 
 export async function PUT(
   req: NextRequest,
@@ -27,13 +26,6 @@ export async function PUT(
           detail: `Người dùng đã chỉnh sửa ghi chú: ${updatedNote.title}`,
           type: "UPDATE",
         },
-      });
-
-      await notificationService.create({
-        userId,
-        title: "CẬP NHẬT GHI CHÚ",
-        message: `Ghi chú "${updatedNote.title}" đã được lưu thay đổi.`,
-        type: "INFO",
       });
     }
     return NextResponse.json(updatedNote);
@@ -71,13 +63,6 @@ export async function DELETE(
           detail: `Người dùng đã xóa ghi chú: ${noteToDelete.title}`,
           type: "DELETE",
         },
-      });
-
-      await notificationService.create({
-        userId,
-        title: "XÓA GHI CHÚ",
-        message: `Bạn đã xóa ghi chú "${noteToDelete.title}" thành công.`,
-        type: "WARN",
       });
     }
     return response;

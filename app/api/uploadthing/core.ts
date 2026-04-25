@@ -1,7 +1,6 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { extractOnlyText } from "@/lib/extractor";
 import prisma from "@/lib/prisma";
-import { notificationService } from "@/lib/notification-service";
 
 const f = createUploadthing();
 
@@ -61,13 +60,6 @@ export const ourFileRouter = {
               detail: `Đã tải lên tài liệu mới: ${file.name}`,
               type: "DOCUMENT",
             },
-          });
-          console.log("[UPLOADTHING] ĐÃ GHI AUDIT LOG THÀNH CÔNG!");
-          await notificationService.create({
-            userId: metadata.userId,
-            title: "TẢI TÀI LIỆU THÀNH CÔNG",
-            message: `File "${file.name}" đã được lưu trữ an toàn.`,
-            type: "SUCCESS",
           });
         } catch (logErr) {
           console.error("Lỗi ghi Audit Log:", logErr);
