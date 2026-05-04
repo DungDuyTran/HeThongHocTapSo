@@ -95,17 +95,25 @@ export function UploadModal({ isOpen, onClose, onAdd }: Props) {
                 }}
                 onClientUploadComplete={(res) => {
                   if (res && res[0]) {
-                    setTitle(res[0].name);
+                    const fileName = res[0].name;
+                    const extension = fileName.split(".").pop()?.toLowerCase();
+
+                    setTitle(fileName);
                     setFileInfo({
                       url: res[0].url,
                       size: (res[0].size / 1024 / 1024).toFixed(2) + " MB",
-                      type: res[0].name.split(".").pop() || "unknown",
+                      type: extension || "unknown",
                     });
                     // Báo thành công khi Upload lên Cloud xong
                     notifier.success(
                       "Đã tải lên mây! ",
                       "Bấm 'Lưu' để hoàn tất nhé.",
                     );
+                    if (extension !== "docx" && extension !== "pdf") {
+                      notifier.warn(
+                        "Lưu ý: AI chỉ hỗ trợ tài liệu .docx và .pdf, vui lòng chỉnh sửa lại tài liệu nếu muốn sử dụng AI"
+                      );
+                    }
                   }
                 }}
                 onUploadProgress={(p) => {

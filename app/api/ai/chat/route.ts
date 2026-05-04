@@ -1,206 +1,186 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 import { NextResponse } from "next/server";
 import axios from "axios";
 import prisma from "@/lib/prisma";
+import { mcpTools } from "@/lib/mcp-tools";
 
 export async function POST(req: Request) {
   try {
     const { message, userId, role } = await req.json();
-    const isAdmin = role === "ADMIN";
-    console.log("--- CHECK DATA ---");
-    console.log("User ID:", userId);
-    console.log("API Key tồn tại không:", !!process.env.GEMINI_API_KEY);
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    const apiUrl = "https://api.deepseek.com/chat/completions";
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const systemInstruction = `Bạn là "Smart Study AI". Phong cách: Thân thiện, xưng "Tui", gọi "Bạn".
+    DƯỚI ĐÂY LÀ CÁC CÔNG CỤ BẠN CÓ:
+    1. query_learning_material("từ_khóa"): Dùng khi tra cứu tài liệu hoặc tóm tắt file.
+    2. get_system_stats(): Dùng khi ADMIN hỏi về số lượng học viên/tài liệu.
+    3. get_system_guide("chủ_đề"): Dùng để hướng dẫn người dùng thao tác trên hệ thống. 
+       Chủ đề: "thông_tin_ca_nhan", "them_tai_lieu", "tao_flashcard".
 
-    let systemInstruction = `Bạn là "Smart Study AI". Phong cách: Thân thiện, xưng "Tui", gọi "Bạn".
-    QUY ĐỊNH QUAN TRỌNG: 
-    - Chỉ sử dụng văn bản thuần túy (Plain text), KHÔNG dùng Markdown (** hoặc __).
-    - KHÔNG tự ý tóm tắt tài liệu trừ khi người dùng yêu cầu hoặc câu hỏi liên quan trực tiếp đến kiến thức trong tài liệu.
-    - Nếu người dùng hỏi về cách sử dụng hệ thống (đổi thông tin, tải file...), hãy trả lời ngay dựa trên HƯỚNG DẪN HỆ THỐNG bên dưới.`;
+    QUY ĐỊNH VỀ ĐỊNH DẠNG:
+    - TUYỆT ĐỐI KHÔNG sử dụng Markdown (** hoặc ###).
+    - Xuống dòng bằng phím Enter bình thường.
+    QUY TẮC GỌI TOOL:
+    - Nếu cần dùng tool, CHỈ TRẢ VỀ duy nhất cú pháp: CALL_TOOL: tên_tool("tham_số")
+    - Tuyệt đối không nói gì thêm khi gọi tool.
 
-    if (isAdmin) {
-      systemInstruction += `
-      BẠN ĐANG TRÒ CHUYỆN VỚI QUẢN TRỊ VIÊN.
-      DỮ LIỆU HỆ THỐNG (Bảng User):
-      - Cột vai trò là: vaitro
-      - Giá trị học viên là: 'HocVien'
-      - Giá trị admin là: 'QuanTri'
-      
-      HƯỚNG DẪN TRUY VẤN CHO ADMIN:
-      - Hỏi số học viên: QUERY: SELECT COUNT(*) as total FROM user WHERE vaitro = 'HocVien'
-      - Hỏi số tài liệu: QUERY: SELECT COUNT(*) as total FROM document
-      - Hỏi tài liệu mới nhất: QUERY: SELECT title FROM document ORDER BY createdAt DESC LIMIT 5
-      - Hỏi tên các học viên: QUERY: SELECT hoTen FROM user WHERE vaitro = 'HocVien' LIMIT 10
-      `;
-    } else {
-      systemInstruction += `
-      HƯỚNG DẪN HỆ THỐNG (ƯU TIÊN):
-      1. Đổi thông tin cá nhân (Họ tên, Email, SĐT, Ngày sinh): Bạn nhấn vào biểu tượng hình người (Avatar) ở góc trên bên phải màn hình -> Chọn mục tương ứng cần sửa -> Nhập thông tin mới -> Nhấn Lưu.
-      2. Tải tài liệu: Vào menu "Tài liệu" -> Nhấn nút "Tải lên".
-      3. Tạo Flashcard: Vào menu "Flashcard" -> Nhấn "Tạo mới".
+    QUY TẮC TẠO FLASHCARD:
+    - Trả về JSON theo định dạng sau:
+    FLASHCARDS_DATA: {
+      "name": "Tên bộ thẻ",
+      "cards": [{"front": "Mặt trước", "back": "Mặt sau"}]
+    }`;
 
-      QUY TẮC TRUY VẤN TÀI LIỆU:
-      - Chỉ khi người dùng hỏi về kiến thức, nội dung chuyên môn, hoặc yêu cầu tóm tắt file, bạn mới được dùng lệnh QUERY.
-      - QUERY: SELECT title, content FROM document WHERE userId = ${userId} AND (title LIKE '%từ_khóa%' OR content LIKE '%từ_khóa%') LIMIT 1
-      - Nếu người dùng chỉ chào hỏi hoặc hỏi cách dùng web, TUYỆT ĐỐI KHÔNG dùng QUERY.      
-      
-      HƯỚNG DẪN TẠO FLASHCARD TỰ ĐỘNG:
-      - Khi người dùng muốn tạo bộ thẻ Flashcard từ tài liệu, hãy phân tích nội dung và trả về JSON theo mẫu chính xác sau:
-      FLASHCARDS_DATA: {
-      "name": "Tên bộ thẻ (Ví dụ: Từ vựng Tiếng Anh chuyên ngành)",
-      "cards": [
-      {"front": "Mặt trước (Khái niệm)", "back": "Mặt sau (Định nghĩa)"},
-      {"front": "Mặt trước 2", "back": "Mặt sau 2"}
-        ]
-      }`;
-    }
-
-    const oldMessages = await prisma.chatHistory.findMany({
-      where: { userId: Number(userId) },
-      orderBy: { createdAt: "desc" }, // Lấy mới nhất trước
-      take: 10,
-    });
-    const history = oldMessages.reverse();
-
-    const chatContent = [
-      ...oldMessages.map((m) => ({
-        role: m.role === "user" ? "user" : "model",
-        parts: [{ text: m.message }],
-      })),
+    const res1 = await axios.post(
+      apiUrl,
       {
-        role: "user",
-        parts: [
-          {
-            text: `${systemInstruction}\n\nCâu hỏi của người dùng: ${message}`,
-          },
+        model: "deepseek-chat",
+        messages: [
+          { role: "system", content: systemInstruction },
+          { role: "user", content: message },
         ],
       },
-    ];
+      { headers: { Authorization: `Bearer ${apiKey}` } },
+    );
 
-    // Gọi AI lần 1
-    const res1 = await axios.post(apiUrl, { contents: chatContent });
+    let aiResponse = res1.data.choices[0].message.content.trim();
+    let dbResult: any = null;
+    let contextPrompt = "";
 
-    // Kiểm tra an toàn dữ liệu trả về
-    if (!res1.data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      throw new Error("AI không trả về nội dung");
+    // --- PHẦN XỬ LÝ TOOL CALL ---
+    if (aiResponse.includes("CALL_TOOL:")) {
+      if (aiResponse.includes("query_learning_material")) {
+        const match = aiResponse.match(/"([^"]+)"/);
+        let keyword = match ? match[1] : "";
+        keyword = keyword.replace(/^file:/i, "").trim();
+        dbResult = await mcpTools.query_learning_material(
+          Number(userId),
+          keyword,
+        );
+        contextPrompt = "NỘI DUNG TÀI LIỆU:";
+      } else if (aiResponse.includes("get_system_stats")) {
+        dbResult = await mcpTools.get_system_stats("Admin");
+        console.log("Dữ liệu thống kê trả về:", dbResult);
+        contextPrompt = "SỐ LIỆU THỐNG KÊ HỆ THỐNG (CHỈ DÀNH CHO ADMIN):";
+      } else if (aiResponse.includes("get_system_guide")) {
+        const match = aiResponse.match(/"([^"]+)"/);
+        const topic = match ? match[1] : "";
+        if (topic === "thông_tin_ca_nhan") {
+          aiResponse =
+            "Để thay đổi thông tin cá nhân, Bạn nhấn vào ô góc phải trên để hiện bảng thông tin rồi chỉnh sửa nhé!";
+        } else if (topic === "them_tai_lieu") {
+          aiResponse =
+            "Để thêm tài liệu, Bạn vào mục Tài liệu, tải tài liệu lên và chờ tui lưu vào hệ thống.";
+        } else if (topic === "tao_flashcard") {
+          aiResponse =
+            "Để tạo bộ thẻ, Bạn vào phần Flashcard, click 'Tạo thư mục' rồi đặt tên và xác nhận.";
+        }
+      }
     }
 
-    let aiResponse = res1.data.candidates[0].content.parts[0].text;
+    // --- NẾU CÓ DỮ LIỆU TỪ DB (TÀI LIỆU HOẶC THỐNG KÊ) ---
+    if (dbResult) {
+      let dataForAI =
+        Array.isArray(dbResult) && dbResult.length > 0 && dbResult[0].content
+          ? dbResult[0].content
+          : JSON.stringify(dbResult);
+      let dataTitle = dbResult[0]?.title || "Dữ liệu hệ thống";
 
-    // Xử lý SQL
-    if (aiResponse.includes("QUERY:")) {
-      try {
-        let sql = aiResponse
-          .split("QUERY:")[1]
-          .trim()
-          .replace(/```sql|```/g, "")
-          .replace(/;/g, "");
-
-        if (!isAdmin && sql.toUpperCase().includes("FROM USER")) {
-          return NextResponse.json({
-            reply: "Tui chỉ có quyền lục tài liệu học tập của Bạn thôi nè!",
-          });
-        }
-
-        console.log("AI ĐANG TRUY VẤN SQL:", sql);
-        const dbData = (await prisma.$queryRawUnsafe(sql)) as any[];
-
-        let contextForAI = "";
-        if (!dbData || dbData.length === 0) {
-          contextForAI =
-            "Tui đã tìm trong kho nhưng không thấy tài liệu nào liên quan đến câu hỏi của Bạn.";
-        } else {
-          const title = dbData[0].title || "Không tên";
-          const content = dbData[0].content || "";
-          // Cắt nội dung còn 8000 ký tự để tránh lỗi "Payload Too Large" (413)
-          contextForAI = `NỘI DUNG TỪ FILE "${title}": ${content.substring(0, 8000)}`;
-        }
-
-        const res2 = await axios.post(apiUrl, {
-          contents: [
-            ...chatContent,
-            { role: "model", parts: [{ text: aiResponse }] },
+      const res2 = await axios.post(
+        apiUrl,
+        {
+          model: "deepseek-chat",
+          messages: [
+            {
+              role: "system",
+              content:
+                "Bạn là Smart Study AI. Hãy dùng dữ liệu hệ thống cung cấp để thực hiện yêu cầu.",
+            },
+            { role: "user", content: message },
+            { role: "assistant", content: aiResponse },
             {
               role: "user",
-              parts: [
-                {
-                  text: `${contextForAI}\n\nBạn hãy dựa vào nội dung tui vừa tìm được để trả lời câu hỏi ban đầu của tui thật thân thiện và súc tích nhé.`,
-                },
-              ],
+              content: `${contextPrompt}\n\n${dataForAI}\n\nNhiệm vụ quan trọng:
+            - Nếu người dùng yêu cầu tạo flashcard, Bạn PHẢI trả về JSON FLASHCARDS_DATA ngay lập tức.
+            - Tuyệt đối KHÔNG ĐƯỢC hỏi lại người dùng (không hỏi số lượng, không hỏi chủ đề). 
+            - Tự động chọn lọc ra 15 từ vựng/kiến thức quan trọng nhất từ tài liệu trên để làm thẻ.
+            - Phải đảm bảo đúng định dạng JSON để hệ thống tự động xử lý lưu trữ.`,
             },
           ],
-        });
-        aiResponse = res2.data.candidates[0].content.parts[0].text;
-      } catch (e: any) {
-        console.error("LỖI SQL HOẶC AI LẦN 2:", e.message);
-        aiResponse =
-          "Tui gặp chút rắc rối khi lục lại bộ nhớ tài liệu. Bạn thử hỏi lại kiểu khác xem!";
-      }
-    }
-    if (aiResponse.includes("FLASHCARDS_DATA:")) {
-      try {
-        const jsonStr = aiResponse.split("FLASHCARDS_DATA:")[1].trim();
-        const flashData = JSON.parse(jsonStr);
+        },
+        { headers: { Authorization: `Bearer ${apiKey}` } },
+      );
 
-        // 1. Tạo Folder mới cho Flashcard
-        const folder = await prisma.flashcardFolder.create({
-          data: {
-            name: flashData.name,
-            userId: Number(userId),
-          },
-        });
+      aiResponse = res2.data.choices[0].message.content;
+      const isFlashcardResponse =
+        aiResponse.includes("FLASHCARDS_DATA:") ||
+        aiResponse.includes('"flashcards":');
 
-        // 2. Insert hàng loạt các card
-        if (folder && flashData.cards.length > 0) {
-          await prisma.flashcard.createMany({
-            data: flashData.cards.map((card: any) => ({
-              front: card.front,
-              back: card.back,
-              folderId: folder.id,
-            })),
-          });
+      // Xử lý lưu Flashcard tự động
+      if (isFlashcardResponse) {
+        try {
+          // 1. Dùng Regex để lấy khối JSON { ... } chuẩn nhất, loại bỏ ```json hay văn bản thừa
+          const jsonMatch = aiResponse.match(/({[\s\S]*})/);
 
-          const user = await prisma.user.findUnique({
-            where: { id: Number(userId) },
-            select: { hoTen: true },
-          });
+          if (jsonMatch) {
+            const flashData = JSON.parse(jsonMatch[1].trim());
 
-          await prisma.auditLog.create({
-            data: {
-              userId: Number(userId),
-              userName: user?.hoTen || "Học viên",
-              action: "TẠO BỘ THẺ TỰ ĐỘNG",
-              table: "flashcardfolder",
-              detail: `AI đã tạo bộ thẻ: ${flashData.name} (${flashData.cards.length} thẻ)`,
-              type: "CREATE",
-            },
-          });
-          aiResponse = `Tui đã soạn xong bộ thẻ "${flashData.name}" với ${flashData.cards.length} thẻ dựa trên tài liệu của Bạn. Bạn kiểm tra trong mục Flashcard nhé!`;
+            // 2. Lấy mảng thẻ học (AI có thể trả về key là 'cards' hoặc 'flashcards')
+            const rawCards = flashData.cards || flashData.flashcards || [];
+            const cardsArray = Array.isArray(rawCards) ? rawCards : [];
+
+            if (cardsArray.length > 0) {
+              // 3. TẠO THƯ MỤC (Folder)
+              // Lấy tên bộ thẻ từ AI, nếu không có thì lấy tên tài liệu hoặc tên mặc định
+              const folderName =
+                flashData.name ||
+                (dbResult && dbResult[0]
+                  ? `Bộ thẻ từ ${dbResult[0].title}`
+                  : "Bộ thẻ AI mới");
+
+              const newFolder = await prisma.flashcardFolder.create({
+                data: {
+                  name: folderName,
+                  userId: Number(userId),
+                },
+              });
+
+              // 4. TẠO CÁC THẺ (Cards) VÀ GÁN VÀO THƯ MỤC
+              // Ánh xạ linh hoạt: front (mặt trước) có thể là 'front', 'word', hoặc 'term'
+              // back (mặt sau) có thể là 'back', 'definition', hoặc 'meaning'
+              await prisma.flashcard.createMany({
+                data: cardsArray.slice(0, 15).map((card: any) => ({
+                  front: String(
+                    card.front || card.word || card.term || "Mặt trước",
+                  ),
+                  back: String(
+                    card.back || card.definition || card.meaning || "Mặt sau",
+                  ),
+                  folderId: newFolder.id,
+                })),
+              });
+
+              aiResponse = `Tui đã tạo xong thư mục "${newFolder.name}" và thêm ${cardsArray.length} thẻ học vào hệ thống cho Bạn rồi nhé!`;
+            }
+          }
+        } catch (e) {
+          console.error("LỖI XỬ LÝ TẠO THƯ MỤC/THẺ:", e);
         }
-      } catch (parseError) {
-        console.error("LỖI XỬ LÝ FLASHCARD:", parseError);
-        aiResponse =
-          "Tui trích xuất dữ liệu Flashcard bị lỗi một chút, bro thử yêu cầu lại nhé!";
       }
     }
-    // Lưu lịch sử (CreateMany)
+
+    // Lưu lịch sử chat
     await prisma.chatHistory.createMany({
       data: [
         { userId: Number(userId), role: "user", message: message },
         { userId: Number(userId), role: "model", message: aiResponse },
       ],
     });
-    // Kiểm tra tổng số tin nhắn của user này
-    const chatCount = await prisma.chatHistory.count({
-      where: { userId: Number(userId) },
-    });
+
     return NextResponse.json({ reply: aiResponse });
   } catch (error: any) {
-    console.log("LỖI TỔNG:", error.response?.data || error.message);
+    console.error("LỖI API:", error.message);
     return NextResponse.json(
-      { reply: "Server AI đang bận tí bạn ơi, đợi vài giây thử lại nhé!" },
+      { reply: "Hệ thống bận tí, thử lại sau nhé!" },
       { status: 500 },
     );
   }

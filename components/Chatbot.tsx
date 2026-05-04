@@ -13,24 +13,28 @@ export const ChatAI = () => {
 
   // 1. Hàm lấy lịch sử từ Database
   const fetchHistory = useCallback(async () => {
-    const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const userStr =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
     const user = userStr ? JSON.parse(userStr) : null;
-    
+
     if (!user?.id) return;
 
     setIsFetchingHistory(true);
     try {
       const res = await fetch(`/api/ai/history?userId=${user.id}`);
       const data = await res.json();
-      
+
       if (data && data.length > 0) {
         setMessages(data);
       } else {
         // Nếu chưa có lịch sử, hiện câu chào mặc định
-        setMessages([{ 
-          role: "assistant", 
-          content: "Chào bro! Tui là Smart Study AI đây. Bro cần tra cứu tài liệu hay hỏi gì không? 😉" 
-        }]);
+        setMessages([
+          {
+            role: "assistant",
+            content:
+              "Chào bro! Tui là Smart Study AI đây. Bro cần tra cứu tài liệu hay hỏi gì không? 😉",
+          },
+        ]);
       }
     } catch (err) {
       console.error("Lỗi lấy lịch sử:", err);
@@ -57,11 +61,18 @@ export const ChatAI = () => {
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
-    const userStr = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const userStr =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
     const user = userStr ? JSON.parse(userStr) : null;
 
     if (!user?.id) {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Bro cần đăng nhập để tui biết bro là ai nhé!" }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Bro cần đăng nhập để tui biết bro là ai nhé!",
+        },
+      ]);
       return;
     }
     const userRole = user.vaiTro === "QuanTri" ? "ADMIN" : "USER";
@@ -75,17 +86,30 @@ export const ChatAI = () => {
       const res = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input, userId: user.id, role: userRole }),
+        body: JSON.stringify({
+          message: input,
+          userId: user.id,
+          role: userRole,
+        }),
       });
-      
+
       const data = await res.json();
       if (res.ok) {
-        setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.reply },
+        ]);
       } else {
         throw new Error(data.reply);
       }
     } catch (err) {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Lỗi kết nối AI rồi bro ơi! Thử lại sau nhé." }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Lỗi kết nối AI rồi bro ơi! Thử lại sau nhé.",
+        },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -95,21 +119,32 @@ export const ChatAI = () => {
     <div className="fixed bottom-6 right-6 z-[100]">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-110 transition-all active:translate-y-1 active:shadow-none"
+        className={`w-16 h-16 rounded-full flex items-center justify-center text-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:scale-110 transition-all active:translate-y-1 active:shadow-none ${
+          isOpen ? "bg-red-500" : "bg-blue-600"
+        }`}
       >
-        {isOpen ? <X size={32} /> : <MessageCircle size={32} />}
+        {isOpen ? (
+          <X size={32} strokeWidth={3} />
+        ) : (
+          <Bot size={35} strokeWidth={2.5} className="animate-pulse" />
+        )}
       </button>
 
       {isOpen && (
         <div className="absolute bottom-20 right-0 w-[350px] md:w-[400px] h-[550px] bg-white rounded-[32px] border-4 border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 duration-300">
-          
+          {/* Header */}
           <div className="p-5 bg-blue-600 text-white border-b-4 border-black flex items-center gap-3">
             <div className="p-2 bg-white rounded-xl border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
               <Bot size={24} className="text-black" />
             </div>
             <div className="flex flex-col">
-              <span className="font-black uppercase italic tracking-tight">AI Assistant</span>
-              <span className="text-[10px] font-bold uppercase opacity-80">Đang trực tuyến</span>
+              <span className="font-black uppercase italic tracking-tight">
+                Smart Study AI
+              </span>
+              <span className="text-[10px] font-bold uppercase opacity-80 flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-400 rounded-full animate-ping"></span>
+                Đang trực tuyến
+              </span>
             </div>
           </div>
 
@@ -117,34 +152,47 @@ export const ChatAI = () => {
             {isFetchingHistory ? (
               <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
                 <Loader2 className="animate-spin" size={32} />
-                <span className="font-bold text-xs uppercase italic">Đang nhớ lại...</span>
+                <span className="font-bold text-xs uppercase italic">
+                  Đang nhớ lại...
+                </span>
               </div>
             ) : (
               <>
                 {messages.map((msg, idx) => (
-                  <div key={idx} className={`flex items-end gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <div className={`w-9 h-9 rounded-full border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0 ${
-                      msg.role === 'user' ? 'bg-yellow-400' : 'bg-white'
-                    }`}>
-                      {msg.role === 'user' ? <User size={18} className="text-black" /> : <Bot size={18} className="text-blue-600" />}
+                  <div
+                    key={idx}
+                    className={`flex items-end gap-3 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-full border-2 border-black flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] shrink-0 ${
+                        msg.role === "user" ? "bg-yellow-400" : "bg-white"
+                      }`}
+                    >
+                      {msg.role === "user" ? (
+                        <User size={18} className="text-black" />
+                      ) : (
+                        <Bot size={18} className="text-blue-600" />
+                      )}
                     </div>
 
-                    <div className={`max-w-[75%] p-4 rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-sm font-bold leading-relaxed ${
-                      msg.role === 'user' 
-                      ? 'bg-blue-500 text-white rounded-br-none' 
-                      : 'bg-white text-slate-800 rounded-bl-none'
-                    }`}>
+                    <div
+                      className={`max-w-[75%] p-3 rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-[11px] font-bold leading-relaxed ${
+                        msg.role === "user"
+                          ? "bg-blue-500 text-white rounded-br-none"
+                          : "bg-white text-slate-800 rounded-bl-none"
+                      }`}
+                    >
                       {msg.content}
                     </div>
                   </div>
                 ))}
               </>
             )}
-            
+
             {loading && (
               <div className="flex items-center gap-2 text-slate-400 font-black italic text-xs ml-12">
                 <Loader2 size={14} className="animate-spin" />
-                AI đang lục lọi database...
+                AI đang xử lý...
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -155,12 +203,13 @@ export const ChatAI = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Hỏi tui gì đi bro..."
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              placeholder="Nhắn gì đó..."
               className="flex-1 bg-slate-50 border-2 border-black px-4 py-3 rounded-xl text-sm font-bold outline-none focus:bg-white transition-all"
             />
-            <button title="Gửi"
-              onClick={handleSendMessage} 
+            <button
+              title="Gửi"
+              onClick={handleSendMessage}
               className="p-3 bg-yellow-400 border-2 border-black rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-500 active:translate-y-0.5 active:shadow-none transition-all"
             >
               <Send size={20} className="text-black" />
