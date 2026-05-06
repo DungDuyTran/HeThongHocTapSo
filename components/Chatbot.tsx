@@ -2,6 +2,7 @@
 
 import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { notifier } from "@/lib/notifier";
 
 export const ChatAI = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -70,12 +71,13 @@ export const ChatAI = () => {
         ...prev,
         {
           role: "assistant",
-          content: "Bro cần đăng nhập để tui biết bro là ai nhé!",
+          content: "Bạn cần đăng nhập để tui biết bạn là ai nhé!",
         },
       ]);
       return;
     }
-    const userRole = user.vaiTro === "QuanTri" ? "ADMIN" : "USER";
+
+    const userRole = user.vaiTro === "QuanTri" ? "Admin" : "HocVien";
 
     const userMsg = { role: "user", content: input };
     setMessages((prev) => [...prev, userMsg]);
@@ -95,14 +97,56 @@ export const ChatAI = () => {
 
       const data = await res.json();
       if (res.ok) {
+        // Hiển thị câu trả lời đã được làm sạch
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: data.reply },
         ]);
-      } else {
-        throw new Error(data.reply);
+
+        // 2. XỬ LÝ LỊCH HỌC TỰ ĐỘNG
+
+        if (
+          data.autoSchedule &&
+          Array.isArray(data.autoSchedule) &&
+          data.autoSchedule.length > 0
+        ) {
+          try {
+            const stored = localStorage.getItem("dtu_events_final");
+            const currentEvents = stored ? JSON.parse(stored) : [];
+
+            // Chuẩn hóa dữ liệu lịch
+            const newEventsNormalized = data.autoSchedule.map((e: any) => ({
+              id: crypto.randomUUID(),
+              title: e.title || "Buổi học AI tạo",
+              start: e.start,
+              end: e.end,
+              note: e.note || "",
+              categoryId: String(e.categoryId || "1"),
+              backgroundColor: "#16a34a", // Màu xanh lá cho đẹp
+            }));
+
+            // Gộp với lịch cũ và lưu vào localStorage
+            const totalEvents = [...currentEvents, ...newEventsNormalized];
+            localStorage.setItem(
+              "dtu_events_final",
+              JSON.stringify(totalEvents),
+            );
+
+            // Bắn tín hiệu để bảng FullCalendar cập nhật ngay lập tức
+            window.dispatchEvent(new Event("storage"));
+
+            // Bắn thông báo xanh
+            notifier?.success(
+              "Đã thêm vào lịch!",
+              "Bạn kiểm tra thời gian biểu nhé.",
+            );
+          } catch (err) {
+            console.error("Lỗi khi lưu lịch ở Frontend:", err);
+          }
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error("Lỗi gửi tin nhắn:", err);
       setMessages((prev) => [
         ...prev,
         {

@@ -35,13 +35,27 @@ export function useSchedule() {
     days: [] as number[], // Lưu danh sách các thứ lặp lại (0: CN, 1: T2...)
   });
 
-  // Khôi phục dữ liệu từ LocalStorage
-  useEffect(() => {
+  const loadData = useCallback(() => {
     const stored = localStorage.getItem("dtu_events_final");
     const storedCate = localStorage.getItem("dtu_cats_final");
     if (stored) setEvents(JSON.parse(stored));
     if (storedCate) setCategories(JSON.parse(storedCate));
   }, []);
+
+  // Khôi phục dữ liệu từ LocalStorage
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    const handleSyncFromAI = (e: any) => {
+      // Khi Chatbot phát ra event "storage", hàm này sẽ chạy để cập nhật lại UI
+      loadData();
+    };
+
+    window.addEventListener("storage", handleSyncFromAI);
+    return () => window.removeEventListener("storage", handleSyncFromAI);
+  }, [loadData]);
 
   const sync = useCallback((newEvs: ScheduleEvent[], newCats?: any[]) => {
     setEvents(newEvs);

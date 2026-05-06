@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     const history = await prisma.chatHistory.findMany({
       where: { userId: Number(userId) },
       orderBy: { createdAt: "asc" },
-      take: 20, // Lấy 20 câu gần nhất cho nhẹ trang
+      take: -20, // Lấy 20 câu gần nhất cho nhẹ trang
     });
 
     // Format lại dữ liệu cho khớp với State của Frontend

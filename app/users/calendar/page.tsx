@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useSchedule } from "./hooks/useSchedule";
 import ScheduleHeader from "./components/ScheduleHeader";
 import ScheduleView from "./components/ScheduleView";
@@ -10,6 +10,31 @@ import { notifier } from "@/lib/notifier";
 export default function SchedulePage() {
   const { events, categories, popups, setPopups, form, setForm, sync } =
     useSchedule();
+
+    useEffect(() => {
+    const handleAIUpdate = () => {
+      try {
+        const stored = localStorage.getItem("dtu_events_final");
+        if (stored) {
+          const parsedEvents = JSON.parse(stored);
+          // Gọi hàm sync của useSchedule để ép UI render lại mảng events mới
+          sync(parsedEvents, categories);
+        }
+      } catch (error) {
+        console.error("Lỗi đồng bộ lịch từ AI:", error);
+      }
+    };
+
+    // Lắng nghe sự kiện custom từ ChatAI bắn ra
+    window.addEventListener("calendar_updated", handleAIUpdate);
+    // Lắng nghe thêm sự kiện storage mặc định của trình duyệt
+    window.addEventListener("storage", handleAIUpdate);
+
+    return () => {
+      window.removeEventListener("calendar_updated", handleAIUpdate);
+      window.removeEventListener("storage", handleAIUpdate);
+    };
+  }, [sync, categories]);
 
   const handleSave = () => {
     // 1. Kiểm tra tên công việc

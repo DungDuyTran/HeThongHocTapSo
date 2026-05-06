@@ -26,14 +26,15 @@ export function RegisterForm({
   onSubmit,
 }: Props) {
   return (
-    <div className="relative w-full min-h-screen overflow-y-auto bg-white py-10">
+    <div className="relative w-full min-h-screen overflow-y-auto bg-white">
       <img
         src="/anh1.jpg"
         alt="background"
         className="absolute inset-0 w-full h-full object-cover opacity-90 fixed"
       />
 
-      <div className="relative z-10 flex items-center justify-center w-full min-h-full mt-[-20px]">
+      {/* Chỉnh items-center và min-h-screen để form vào giữa màn hình */}
+      <div className="relative z-10 flex items-center justify-center w-full min-h-screen py-10">
         <div className="bg-[rgb(237,215,148)] bg-opacity-80 p-8 rounded-lg w-[450px] shadow-xl">
           <h1 className="text-5xl font-bold text-[rgb(163,138,60)] mb-3 text-center drop-shadow-md">
             Đăng ký
